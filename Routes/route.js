@@ -17,6 +17,7 @@ router.post('/tutorOtpVerification', tutorController.tutorOtpVerification)
 router.post('/tutorVerification', tutorController.tutorVerification)
 router.get('/languageList',tutorController.languageList)
 router.get('/tutorDetail/:email',tutorController.tutorDetail)
+router.post('/tutorPremiumPurchase',tutorController.tutorPremiumPurchase)
 
 
 router.post('/adminLogin',adminController.adminLogin)
