@@ -21,6 +21,18 @@ const tutorSchema = new mongoose.Schema({
         type: Boolean,
         default: false 
     },
+    totalTime:{
+        type:Number,
+        required:true,
+    },
+    timeSlot:{
+        type: Object,
+        required:true,
+    },
+    price:{
+        type:Number,
+        required:true
+    },
     is_verified: {
         type: Boolean,
         default: false,

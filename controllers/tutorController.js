@@ -101,7 +101,16 @@ exports.TutorRegistration = async (req, res) => {
 
 exports.tutorOtpVerification = async (req, res) =>{
     const generateOtp = myCache.data.tmyOtp.v;
-    const{name, email, mobile, language, photo, confirmPassword, otp} = req.body;
+    const{name, 
+        email, 
+        mobile, 
+        language, 
+        photo, 
+        confirmPassword, 
+        otp, 
+        timeSlot, 
+        price, 
+        hour} = req.body;
     if(generateOtp === otp){
         try {
             const result = await cloudinary.uploader.upload(photo, {
@@ -117,6 +126,9 @@ exports.tutorOtpVerification = async (req, res) =>{
                 photo: imageUrl,
                 language:language,
                 role:"tutor",
+                timeSlot:timeSlot,
+                totalTime:hour,
+                price:price,
               });
               const storedData = await tutorRegister.save();
               res.status(200).json({
@@ -231,5 +243,36 @@ exports.tutorPremiumPurchase = async(req, res) =>{
 	} catch (error) {
 		console.log(error)
 	}
+}
+
+
+exports.tutorProfileEdit = async(req, res) =>{
+    const {name, email, phone, password, confPassword} = req.body
+    const hPassword = await securedPassword(password);
+    try {
+        const updateUser = await tutors.findOneAndUpdate(
+            { email: email }, // The query to find the document
+            {
+              $set: {
+                name: name, // Replace newName with the new name value
+                email: email, // Replace newEmail with the new email value
+                phone: phone,
+                password:hPassword// Replace newPhone with the new phone value
+              },
+            },
+            { new: true } // To return the updated document (optional)
+          );
+          if(updateUser){
+            res.json({
+                message:'ok'
+            })
+          }else{
+            res.json({
+                message:'failed'
+            })
+          }
+    } catch (error) {
+        
+    }
 }
 
