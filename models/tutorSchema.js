@@ -19,19 +19,19 @@ const tutorSchema = new mongoose.Schema({
     },
     is_blocked: {
         type: Boolean,
-        default: false 
+        default: false
     },
-    totalTime:{
-        type:Number,
-        required:true,
+    totalTime: {
+        type: Number,
+        required: true,
     },
-    timeSlot:{
+    timeSlot: {
         type: Object,
-        required:true,
+        required: true,
     },
-    price:{
-        type:Number,
-        required:true
+    price: {
+        type: Number,
+        required: true
     },
     is_verified: {
         type: Boolean,
@@ -41,27 +41,31 @@ const tutorSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
-    profilePhoto:{
-        type:String
+    profilePhoto: {
+        type: String
     },
-    backgroundPhoto:{
-        type:String
+    backgroundPhoto: {
+        type: String
     },
-    language:{
-        type:String
+    language: {
+        type: String
     },
-    certificate:{
-        type:String
+    certificate: {
+        type: String
     },
-    role:{
-        type:String
+    role: {
+        type: String
     },
-    availableTime:[{
-        type: Number, 
+    availableTime: [{
+        type: Number,
     }],
-    bookedTime:[{
-        type:Number,
+    bookedTime: [{
+        type: Number,
     }],
+    is_premium:{
+        type:Boolean,
+        default : false,
+    },
 })
 
 

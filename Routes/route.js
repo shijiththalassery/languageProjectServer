@@ -18,7 +18,8 @@ router.post('/tutorVerification', tutorController.tutorVerification)
 router.get('/languageList',tutorController.languageList)
 router.get('/tutorDetail/:email',tutorController.tutorDetail)
 router.post('/tutorPremiumPurchase',tutorController.tutorPremiumPurchase)
-
+router.post('/tutorProfileEdit',tutorController.tutorProfileEdit)
+router.post('/tutorPremuimSetUp',tutorController.tutorPremuimSetUp)
 
 router.post('/adminLogin',adminController.adminLogin)
 router.get('/adminTutorList',adminController.tutorList)

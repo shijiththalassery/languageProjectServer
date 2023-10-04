@@ -15,10 +15,10 @@ const Razorpay = require('razorpay');
 const shortid = require('shortid')
 
 
-var razorpay  = new Razorpay({
+var razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY,
     key_secret: process.env.RAZORPAY_SECRET_KEY,
-  });
+});
 
 const sendOtpMail = async (username, email, otp) => {
     try {
@@ -56,19 +56,19 @@ const sendOtpMail = async (username, email, otp) => {
 
 const securedPassword = async (password) => {
     try {
-      const hashedPassword = await bcrypt.hash(password, 12);
-      return hashedPassword;
+        const hashedPassword = await bcrypt.hash(password, 12);
+        return hashedPassword;
     } catch (error) {
-      console.log(error.message)
+        console.log(error.message)
     }
-  }
+}
 
 
 exports.TutorRegistration = async (req, res) => {
     const minutes = 5;
     const millisecondsInOneMinute = 60 * 1000;
     const cacheDuration = minutes * millisecondsInOneMinute;
-    const {name,email} = req.body
+    const { name, email } = req.body
     const tutorData = req.body;
     const key = "data";
     const value = tutorData;
@@ -84,7 +84,7 @@ exports.TutorRegistration = async (req, res) => {
         const tutorData = await tutors.findOne({ email: req.body.email })
         if (tutorData) {
             res.json({
-                message:'user is alredy exist'
+                message: 'user is alredy exist'
             })
             return;
         } else {
@@ -93,29 +93,29 @@ exports.TutorRegistration = async (req, res) => {
             return;
         }
         console.log("haiiii")
-    } 
+    }
     catch (error) {
         console.log(error)
     }
 }
 
-exports.tutorOtpVerification = async (req, res) =>{
+exports.tutorOtpVerification = async (req, res) => {
     const generateOtp = myCache.data.tmyOtp.v;
-    const{name, 
-        email, 
-        mobile, 
-        language, 
-        photo, 
-        confirmPassword, 
-        otp, 
-        timeSlot, 
-        price, 
-        hour} = req.body;
-    if(generateOtp === otp){
+    const { name,
+        email,
+        mobile,
+        language,
+        photo,
+        confirmPassword,
+        otp,
+        timeSlot,
+        price,
+        hour } = req.body;
+    if (generateOtp === otp) {
         try {
             const result = await cloudinary.uploader.upload(photo, {
-                folder: 'tutors', 
-              });
+                folder: 'tutors',
+            });
             const imageUrl = result.secure_url;
             const hPassword = await securedPassword(confirmPassword);
             const tutorRegister = new tutors({
@@ -124,23 +124,23 @@ exports.tutorOtpVerification = async (req, res) =>{
                 phone: mobile,
                 password: hPassword,
                 photo: imageUrl,
-                language:language,
-                role:"tutor",
-                timeSlot:timeSlot,
-                totalTime:hour,
-                price:price,
-              });
-              const storedData = await tutorRegister.save();
-              res.status(200).json({
+                language: language,
+                role: "tutor",
+                timeSlot: timeSlot,
+                totalTime: hour,
+                price: price,
+            });
+            const storedData = await tutorRegister.save();
+            res.status(200).json({
                 message: 'ok',
                 data: storedData
-              });
+            });
         } catch (error) {
             console.log(error)
         }
-    }else{
+    } else {
         res.json({
-            message:'wrong otp'
+            message: 'wrong otp'
         })
     }
 }
@@ -202,7 +202,6 @@ exports.languageList = async (req, res) => {
     }
 }
 exports.tutorDetail = async (req, res) => {
-    console.log(req.params.email)
     const email = req.params.email
     const stringWithQuotes = email;
     const emailId = stringWithQuotes.replace(/"/g, '');
@@ -220,59 +219,91 @@ exports.tutorDetail = async (req, res) => {
     }
 }
 
-exports.tutorPremiumPurchase = async(req, res) =>{
+exports.tutorPremiumPurchase = async (req, res) => {
     const payment_capture = 1
-	const amount = 990
-	const currency = 'INR'
+    const amount = 990
+    const currency = 'INR'
 
-	const options = {
-		amount: amount * 100,
-		currency,
-		receipt: shortid.generate(),
-		payment_capture
-	}
+    const options = {
+        amount: amount * 100,
+        currency,
+        receipt: shortid.generate(),
+        payment_capture
+    }
 
-	try {
-		const response = await razorpay.orders.create(options)
-		console.log(response)
-		res.json({
-			id: response.id,
-			currency: response.currency,
-			amount: response.amount
-		})
-	} catch (error) {
-		console.log(error)
-	}
+    try {
+        const response = await razorpay.orders.create(options)
+        console.log(response)
+        res.json({
+            id: response.id,
+            currency: response.currency,
+            amount: response.amount
+        })
+    } catch (error) {
+        console.log(error)
+    }
 }
 
 
-exports.tutorProfileEdit = async(req, res) =>{
-    const {name, email, phone, password, confPassword} = req.body
+exports.tutorProfileEdit = async (req, res) => {
+    const { name, email, phone, password, confPassword } = req.body;
+    console.log(name, email, phone, password, 'these are the user edit data from edit profile')
     const hPassword = await securedPassword(password);
     try {
         const updateUser = await tutors.findOneAndUpdate(
             { email: email }, // The query to find the document
             {
-              $set: {
-                name: name, // Replace newName with the new name value
-                email: email, // Replace newEmail with the new email value
-                phone: phone,
-                password:hPassword// Replace newPhone with the new phone value
-              },
+                $set: {
+                    name: name, // Replace newName with the new name value
+                    email: email, // Replace newEmail with the new email value
+                    phone: phone,
+                    password: hPassword// Replace newPhone with the new phone value
+                },
             },
             { new: true } // To return the updated document (optional)
-          );
-          if(updateUser){
+        );
+        if (updateUser) {
             res.json({
-                message:'ok'
+                message: 'ok'
             })
-          }else{
+        } else {
             res.json({
-                message:'failed'
+                message: 'failed'
             })
-          }
+        }
     } catch (error) {
-        
+
     }
+}
+
+exports.tutorPremuimSetUp = async (req, res) => {
+    const { email } = req.body;
+    console.log(email)
+    try {
+        const data = await tutors.findOne({email:email});
+        console.log(data.name, data.email, 'these are the data from api')
+        const updateUser = await tutors.findOneAndUpdate(
+            { email: email },
+            {
+                $set: {
+                    is_premium: true,
+                },
+            },
+            { new: true }
+        );
+        if (updateUser) {
+            console.log(updateUser.is_premium,'this is the updated user')
+            res.json({
+                message: 'ok',
+            })
+        } else {
+            res.json({
+                message: 'fail'
+            })
+        }
+    } catch (error) {
+        console.log(errr)
+    }
+
 }
 
