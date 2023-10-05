@@ -24,6 +24,9 @@ const studentSchema = new mongoose.Schema({
     photo: {
         type: String,
     },
+    backgroundPhoto: {
+        type: String,
+    },
     role: {
         type: String,
     },

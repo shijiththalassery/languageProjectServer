@@ -66,6 +66,9 @@ const tutorSchema = new mongoose.Schema({
         type:Boolean,
         default : false,
     },
+    backgroundPhoto : {
+        type: String,
+    }
 })
 
 

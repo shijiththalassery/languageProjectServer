@@ -108,32 +108,62 @@ exports.tutorList = async (req, res) => {
 }
 
 exports.tutorBlock = async (req, res) => {
+    const id = req.params.id;
     try {
-        console.log(req.params.id, 'this is block and unblock')
-        const tutor = await tutors.findByIdAndUpdate(req.params.id);
-        tutor.is_blocked = true;
-        await tutor.save()
-        const tutorData = await tutors.find({})
-        res.json({
-            tutorData: tutorData,
-            message: 'user blocked successfully',
-        })
+        const tutorsData = await tutors.findByIdAndUpdate(req.params.id)
+        const updateUser = await tutors.findByIdAndUpdate(
+            id,
+            {
+                $set: {
+                    is_blocked: true,
+                },
+            },
+            { new: true }
+        );
+        if (updateUser) {
+            console.log(tutorsData,'before update', updateUser,'after update')
+            res.json({
+                message: 'tutor blocked successfully'
+            })
+        } else {
+            res.json({
+                message: 'failed'
+            })
+        }
     } catch (error) {
         console.log(error)
     }
 }
-exports.tutorUnBlock = async (req, res) => {
-    try {
-        console.log('inside tutorBlock')
-        const tutor = await tutors.findByIdAndUpdate(req.params.id);
-        tutor.is_blocked = false;
-        await tutor.save()
-        console.log(tutor)
-        res.json({
-            message: 'shijith okey res'
-        })
-    } catch (error) {
 
+exports.tutorUnBlock = async (req, res) => {
+    const id = req.params.id;
+    try {
+        try {
+            const tutorsData = await tutors.findByIdAndUpdate(req.params.id)
+            const updateUser = await tutors.findByIdAndUpdate(
+                id,
+                {
+                    $set: {
+                        is_blocked: false,
+                    },
+                },
+                { new: true }
+            );
+            if (updateUser) {
+                console.log(tutorsData,'before update', updateUser,'after update')
+                res.json({
+                    message: 'tutor unblocked successfully'
+                })
+            } else {
+                res.json({
+                    message: 'failed'
+                })
+            }
+        } catch (error) {
+            console.log(error)
+        }
+    } catch (error) {
+        console.log(erro)
     }
 }
 
@@ -152,7 +182,7 @@ exports.studentBlock = async (req, res) => {
     const id = req.params.id;
     try {
         const student = await students.findByIdAndUpdate(req.params.id)
-        console.log(student,'this is test usesr for entering detail')
+        console.log(student, 'this is test usesr for entering detail')
         const updateUser = await students.findByIdAndUpdate(
             id,
             {
@@ -162,12 +192,12 @@ exports.studentBlock = async (req, res) => {
             },
             { new: true }
         );
-        if(updateUser){
+        if (updateUser) {
             console.log(updateUser)
             res.json({
                 message: 'student blocked successfully'
             })
-        }else{
+        } else {
             res.json({
                 message: 'failed'
             })
@@ -181,8 +211,6 @@ exports.studentUnblock = async (req, res) => {
 
     const id = req.params.id;
     try {
-        const student = await students.findByIdAndUpdate(req.params.id)
-        console.log(student.name,'is entered with ')
         const updateUser = await students.findByIdAndUpdate(
             id,
             {
@@ -192,12 +220,11 @@ exports.studentUnblock = async (req, res) => {
             },
             { new: true }
         );
-        if(updateUser){
-            console.log(student, 'before update', updateUser, 'after update')
+        if (updateUser) {
             res.json({
                 message: 'student unblocked successfully'
             })
-        }else{
+        } else {
             res.json({
                 message: 'failed'
             })

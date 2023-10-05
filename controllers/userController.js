@@ -9,6 +9,7 @@ const path = require('path');
 const handlebars = require('handlebars');
 const myCache = new NodeCache();
 const cloudinary = require('../config/cloudinary');
+const generateToken = require('../util/generateToken')
 
 
 const sendOtpMail = async (username, email, otp) => {
@@ -135,9 +136,10 @@ exports.userLogin = async (req, res) => {
       const passwordMatch = await bcrypt.compare(userPassword, studentData.password);
       if (passwordMatch) {
         console.log('student password matching');
+        generateToken(res, studentData._id);
         res.json({
           success: true,
-          tutorDetail: studentData,
+          studentDetail: studentData,
           role: 'student'
         });
       } else {

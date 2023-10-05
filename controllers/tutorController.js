@@ -246,10 +246,27 @@ exports.tutorPremiumPurchase = async (req, res) => {
 
 
 exports.tutorProfileEdit = async (req, res) => {
-    const { name, email, phone, password, confPassword } = req.body;
-    console.log(name, email, phone, password, 'these are the user edit data from edit profile')
+    const { 
+        name, 
+        email, 
+        phone, 
+        password, 
+        confPassword ,
+        profilePhoto, 
+        backgroundPhoto} = req.body;
+    console.log(profilePhoto, backgroundPhoto, 'these are the user edit data from edit profile')
     const hPassword = await securedPassword(password);
     try {
+        const profile = await cloudinary.uploader.upload(profilePhoto, {
+            folder: 'tutorProfilePhoto',
+        });
+        const profileUrl = profile.secure_url;
+
+        const background = await cloudinary.uploader.upload(backgroundPhoto, {
+            folder: 'tutorProfilePhoto',
+        });
+        const backgroundUrl = background.secure_url;
+
         const updateUser = await tutors.findOneAndUpdate(
             { email: email }, // The query to find the document
             {
@@ -257,7 +274,9 @@ exports.tutorProfileEdit = async (req, res) => {
                     name: name, // Replace newName with the new name value
                     email: email, // Replace newEmail with the new email value
                     phone: phone,
-                    password: hPassword// Replace newPhone with the new phone value
+                    password: hPassword,
+                    profilePhoto:profileUrl,// Replace newPhone with the new phone value
+                    backgroundPhoto:backgroundUrl
                 },
             },
             { new: true } // To return the updated document (optional)
