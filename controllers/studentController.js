@@ -3,9 +3,9 @@ const tutors = require("../models/tutorSchema")
 const bcrypt = require("bcryptjs");
 
 //hash password using bcrypt
-const securedPassword = async(password)=>{
+const securedPassword = async (password) => {
     try {
-        const hashedPassword = await bcrypt.hash(password,12);
+        const hashedPassword = await bcrypt.hash(password, 12);
         return hashedPassword;
     } catch (error) {
         console.log(error.message)
@@ -13,56 +13,71 @@ const securedPassword = async(password)=>{
 }
 
 
-exports.studentRegister = async(req, res)=>{
+exports.studentRegister = async (req, res) => {
 
     console.log(req.body)
-    const{username,mobileNumber,email,password} = req.body;
-    if(!username || !email || !mobileNumber || !password){
-        res.status(400).json({error:"please Enter All Input Data"})
+    const { username, mobileNumber, email, password } = req.body;
+    if (!username || !email || !mobileNumber || !password) {
+        res.status(400).json({ error: "please Enter All Input Data" })
     }
 
     try {
-        const preStudent = await students.findOne({email:email})
-        if(preStudent){
-            res.status(400).json({error:"Student is alredy exist"})
+        const preStudent = await students.findOne({ email: email })
+        if (preStudent) {
+            res.status(400).json({ error: "Student is alredy exist" })
             CloseEvent.log('inside user is alredy exist')
-        }else{
+        } else {
             const hPassword = await securedPassword(password)
             const studentRegister = new students({
-                name:username,
-                email:email,
-                phone:mobileNumber,
-                password:hPassword
+                name: username,
+                email: email,
+                phone: mobileNumber,
+                password: hPassword
             });
             const storedData = await studentRegister.save();
             res.status(200).json(storedData)
         }
     } catch (error) {
-        res.status(400).json({error:"Invalid Details",error})
+        res.status(400).json({ error: "Invalid Details", error })
     }
 }
 
-exports.tutorList = async(req, res) => {
+exports.tutorList = async (req, res) => {
     try {
-        const tutorList = await tutors.find({is_blocked:false});
-        if(tutorList){
+        const tutorList = await tutors.find({ is_blocked: false });
+        if (tutorList) {
             res.json(tutorList)
-        }else{
+        } else {
             res.json({
-                message:'there is no tutor'
+                message: 'there is no tutor'
             })
         }
     } catch (error) {
         console.log(error);
         res.json({
-            message:'server error',
+            message: 'server error',
         })
     }
 }
 
-exports.tutorDetail = async(req, res) =>{
+exports.tutorDetail = async (req, res) => {
     console.log(req.params.id)
-    res.json({
-        message:'ok'
-    })
+    const id = req.params.id;
+    try {
+        const tutorDetail = await tutors.findById(id)
+        if (tutorDetail) {
+            res.json({
+                tutorDetail
+            })
+        } else {
+            res.json({
+                message: 'tutor is not found'
+            })
+        }
+    } catch (error) {
+        console.log(error);
+        res.json({
+            message: "server error"
+        })
+    }
 }
