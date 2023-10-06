@@ -12,6 +12,7 @@ router.post('/checkUser', userController.checkUser);
 router.post('/userRegistration', userController.userRegistration); 
 router.post('/userLogin',userController.userLogin) 
 router.get('/tutorList',studentController.tutorList)
+router.get('/TutorDetail/:id',studentController.tutorDetail)
 
 router.post('/TutorRegistration', tutorController.TutorRegistration)
 router.post('/tutorOtpVerification', tutorController.tutorOtpVerification)

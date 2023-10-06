@@ -59,3 +59,10 @@ exports.tutorList = async(req, res) => {
         })
     }
 }
+
+exports.tutorDetail = async(req, res) =>{
+    console.log(req.params.id)
+    res.json({
+        message:'ok'
+    })
+}
