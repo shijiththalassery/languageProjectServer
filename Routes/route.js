@@ -11,6 +11,7 @@ router.post('/student/register', studentController.studentRegister);
 router.post('/checkUser', userController.checkUser); 
 router.post('/userRegistration', userController.userRegistration); 
 router.post('/userLogin',userController.userLogin) 
+router.get('/tutorList',studentController.tutorList)
 
 router.post('/TutorRegistration', tutorController.TutorRegistration)
 router.post('/tutorOtpVerification', tutorController.tutorOtpVerification)

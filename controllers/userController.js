@@ -83,16 +83,16 @@ exports.checkUser = async (req, res) => {
 }
 
 exports.userRegistration = async (req, res) => {
-  
+
   const generateOtp = myCache.data.myOtp.v;
-  
-  const { username, mobileNumber, email, confrimPassword, photo, otp } = req.body;  
+
+  const { username, mobileNumber, email, confrimPassword, photo, otp } = req.body;
   const str = mobileNumber;
   const number = parseInt(str, 10);
-  console.log(generateOtp,'is generated otp ',otp,'is user typed otp')
+  console.log(generateOtp, 'is generated otp ', otp, 'is user typed otp')
   try {
     const result = await cloudinary.uploader.upload(photo, {
-      folder: 'students', 
+      folder: 'students',
     });
     const imageUrl = result.secure_url;
     if (generateOtp == otp) {
@@ -100,10 +100,9 @@ exports.userRegistration = async (req, res) => {
       const studentRegister = new students({
         name: username,
         email: email,
-        phone: number,
+        phone: mobileNumber,
         password: hPassword,
-        photo: imageUrl,
-        role:"student",
+        role: "student",
       });
       const storedData = await studentRegister.save();
       res.status(200).json({

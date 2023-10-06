@@ -41,3 +41,21 @@ exports.studentRegister = async(req, res)=>{
         res.status(400).json({error:"Invalid Details",error})
     }
 }
+
+exports.tutorList = async(req, res) => {
+    try {
+        const tutorList = await tutors.find({is_blocked:false});
+        if(tutorList){
+            res.json(tutorList)
+        }else{
+            res.json({
+                message:'there is no tutor'
+            })
+        }
+    } catch (error) {
+        console.log(error);
+        res.json({
+            message:'server error',
+        })
+    }
+}
