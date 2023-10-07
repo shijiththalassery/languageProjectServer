@@ -4,24 +4,26 @@ const router = express.Router(); // Initialize the router
 
 const studentController = require("../controllers/studentController");
 const userController = require("../controllers/userController");
-const tutorController = require('../controllers/tutorController')
-const adminController = require('../controllers/adminController')
+const tutorController = require('../controllers/tutorController');
+const adminController = require('../controllers/adminController');
 
 router.post('/student/register', studentController.studentRegister);
 router.post('/checkUser', userController.checkUser); 
 router.post('/userRegistration', userController.userRegistration); 
-router.post('/userLogin',userController.userLogin) 
-router.get('/tutorList',studentController.tutorList)
-router.get('/tutorDetail/:id',studentController.tutorDetail)
+router.post('/userLogin',userController.userLogin); 
+router.get('/tutorList',studentController.tutorList);
+router.post('/coursePurchase',studentController.coursePurchase);
 
-router.post('/TutorRegistration', tutorController.TutorRegistration)
-router.post('/tutorOtpVerification', tutorController.tutorOtpVerification)
-router.post('/tutorVerification', tutorController.tutorVerification)
-router.get('/languageList',tutorController.languageList)
-router.get('/tutorDetail/:email',tutorController.tutorDetail)
-router.post('/tutorPremiumPurchase',tutorController.tutorPremiumPurchase)
-router.post('/tutorProfileEdit',tutorController.tutorProfileEdit)
-router.post('/tutorPremuimSetUp',tutorController.tutorPremuimSetUp)
+
+
+router.post('/TutorRegistration', tutorController.TutorRegistration);
+router.post('/tutorOtpVerification', tutorController.tutorOtpVerification);
+router.post('/tutorVerification', tutorController.tutorVerification);
+router.get('/languageList',tutorController.languageList);
+router.get('/tutorDetail/:email',tutorController.tutorDetail);
+router.post('/tutorPremiumPurchase',tutorController.tutorPremiumPurchase);
+router.post('/tutorProfileEdit',tutorController.tutorProfileEdit);
+router.post('/tutorPremuimSetUp',tutorController.tutorPremuimSetUp);
 
 router.post('/adminLogin',adminController.adminLogin)
 router.get('/adminTutorList',adminController.tutorList)
