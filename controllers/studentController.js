@@ -1,6 +1,8 @@
 const students = require("../models/studentShema");
 const tutors = require("../models/tutorSchema")
 const bcrypt = require("bcryptjs");
+const Razorpay = require('razorpay');
+const shortid = require('shortid')
 
 //hash password using bcrypt
 const securedPassword = async (password) => {
@@ -12,6 +14,11 @@ const securedPassword = async (password) => {
     }
 }
 
+
+var razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY,
+    key_secret: process.env.RAZORPAY_SECRET_KEY,
+});
 
 exports.studentRegister = async (req, res) => {
 
@@ -61,7 +68,6 @@ exports.tutorList = async (req, res) => {
 }
 
 exports.tutorDetail = async (req, res) => {
-    console.log("this is single tutor id ")
     const id = req.params.id;
     try {
         const tutorDetail = await tutors.findById(id)
@@ -83,8 +89,18 @@ exports.tutorDetail = async (req, res) => {
 }
 
 exports.coursePurchase = async (req, res) => {
+    const id = req.params.id;
+    let amount;
+    try {
+        const tutorDetail = await tutors.findById(id);
+        if(tutorDetail){
+            amount = tutorDetail.price;
+        } 
+    } catch (error) {
+        console.log(error)
+    }
     const payment_capture = 1
-    const amount = 990
+    
     const currency = 'INR'
 
     const options = {
@@ -95,7 +111,8 @@ exports.coursePurchase = async (req, res) => {
     }
 
     try {
-        const response = await razorpay.orders.create(options)
+        const response = await razorpay.orders.create(options);
+        console.log('this is the line')
         console.log(response)
         res.json({
             id: response.id,

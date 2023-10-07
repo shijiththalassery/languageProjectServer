@@ -12,7 +12,8 @@ router.post('/checkUser', userController.checkUser);
 router.post('/userRegistration', userController.userRegistration); 
 router.post('/userLogin',userController.userLogin); 
 router.get('/tutorList',studentController.tutorList);
-router.post('/coursePurchase',studentController.coursePurchase);
+router.get('/tutorDetail/:id',studentController.tutorDetail);
+router.get('/coursePurchase/:id',studentController.coursePurchase);
 
 
 
