@@ -61,7 +61,7 @@ exports.tutorList = async (req, res) => {
 }
 
 exports.tutorDetail = async (req, res) => {
-    console.log(req.params.id)
+    console.log("this is single tutor id ")
     const id = req.params.id;
     try {
         const tutorDetail = await tutors.findById(id)

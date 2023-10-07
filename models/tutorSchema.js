@@ -59,9 +59,10 @@ const tutorSchema = new mongoose.Schema({
     availableTime: [{
         type: Number,
     }],
-    bookedTime: [{
-        type: Number,
-    }],
+    bookedTime: {
+        type: Object,
+        required: true,
+    },
     is_premium:{
         type:Boolean,
         default : false,
