@@ -30,6 +30,12 @@ const studentSchema = new mongoose.Schema({
     role: {
         type: String,
     },
+    tutor:{
+        type:mongoose.Schema.Types.ObjectId,
+    },
+    selectedTime:{
+        type:Object,
+    }
 })
 
 const students = new mongoose.model('students', studentSchema)

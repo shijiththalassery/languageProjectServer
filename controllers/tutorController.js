@@ -20,6 +20,8 @@ var razorpay = new Razorpay({
     key_secret: process.env.RAZORPAY_SECRET_KEY,
 });
 
+
+
 const sendOtpMail = async (username, email, otp) => {
     try {
         const templatePath = path.join(__dirname, 'otp.html');
@@ -63,6 +65,37 @@ const securedPassword = async (password) => {
     }
 }
 
+
+exports.tutorLogin = async(req, res) => {
+    const {email, password} = req.body;
+    try {
+        const tutorData = await tutors.findOne({ email: email });
+        if (tutorData.is_blocked == true) {
+          res.json({ error: 'error' });
+          return;
+        }
+        const passwordMatch = await bcrypt.compare(password, tutorData.password);
+        if (passwordMatch) {
+          console.log('student password matching');
+          res.json({
+            success: true,
+            tutorDetail: tutorData,
+            role: 'tutor'
+          });
+          return;
+        }else{
+            res.json({
+                message:false
+            })
+            return;
+        }
+    } catch (error) {
+        console.log(error);
+        res.json({
+            message:'server error'
+        })
+    }
+}
 
 exports.TutorRegistration = async (req, res) => {
     const minutes = 5;
@@ -202,11 +235,13 @@ exports.languageList = async (req, res) => {
     }
 }
 exports.tutorDetail = async (req, res) => {
+    console.log('inside the tutorDetail')
     const email = req.params.email
     const stringWithQuotes = email;
     const emailId = stringWithQuotes.replace(/"/g, '');
+    console.log(email,'thsi is the email of the tutor')
     try {
-        const tutorDetail = await tutors.findOne({ email: emailId })
+        const tutorDetail = await tutors.findOne({ email: email })
         if (tutorDetail) {
             res.json({
                 message: 'success',
@@ -218,6 +253,8 @@ exports.tutorDetail = async (req, res) => {
         console.log(error)
     }
 }
+
+
 
 exports.tutorPremiumPurchase = async (req, res) => {
     const payment_capture = 1
@@ -321,8 +358,38 @@ exports.tutorPremuimSetUp = async (req, res) => {
             })
         }
     } catch (error) {
-        console.log(errr)
+        console.log(error)
     }
 
 }
 
+
+exports.googleAuthCheckTutuor = async (req, res)=>{
+    console.log('inside google auth tutor entry')
+    console.log(req.body)
+    const {email } = req.body;
+    try {
+        const tutorData = await tutors.findOne({ email: email });
+        if(tutorData){
+            console.log(tutorData,'this is tutor data')
+            if (tutorData.is_blocked == true) {
+                res.json({ message: 'error' });
+                return;
+              }else{
+                  res.json({
+                      message:"success"
+                  })
+                  return;
+              }
+        }else{
+            res.json({
+                message:'notFound'
+            })
+        }
+    } catch (error) {
+        console.log(error);
+        req.json({
+            message:'serverError'
+        })
+    }
+}

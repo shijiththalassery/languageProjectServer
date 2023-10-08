@@ -2,7 +2,8 @@ const students = require("../models/studentShema");
 const tutors = require("../models/tutorSchema")
 const bcrypt = require("bcryptjs");
 const Razorpay = require('razorpay');
-const shortid = require('shortid')
+const shortid = require('shortid');
+const mongoose = require('mongoose');
 
 //hash password using bcrypt
 const securedPassword = async (password) => {
@@ -93,14 +94,14 @@ exports.coursePurchase = async (req, res) => {
     let amount;
     try {
         const tutorDetail = await tutors.findById(id);
-        if(tutorDetail){
+        if (tutorDetail) {
             amount = tutorDetail.price;
-        } 
+        }
     } catch (error) {
         console.log(error)
     }
     const payment_capture = 1
-    
+
     const currency = 'INR'
 
     const options = {
@@ -121,5 +122,119 @@ exports.coursePurchase = async (req, res) => {
         })
     } catch (error) {
         console.log(error)
+    }
+}
+
+
+exports.buyCourse = async (req, res) => {
+
+    const { userSelectedTime, tutorId, userId } = req.body;
+    console.log(userSelectedTime, tutorId, userId,'this is back end data')
+    const objectId = new mongoose.Types.ObjectId(tutorId);
+    console.log(objectId)
+    try {
+        const tutor = await tutors.findById(objectId);
+        console.log(tutor)
+        if (tutor) {
+            for (const day in userSelectedTime) {
+                const time = userSelectedTime[day];
+                if (tutor.timeSlot[day]) {
+                    tutor.timeSlot[day] = tutor.timeSlot[day].filter((t) => t !== time);
+                }
+                // if (tutor.bookedTime[day]) {
+                //     // Day exists in bookedTime, push the time to the array
+                //     tutor.bookedTime[day].push(time);
+                //   } else {
+                //     // Day doesn't exist in bookedTime, create a new array with the time
+                //     tutor.bookedTime[day] = [time];
+                //   }
+            }
+    
+            await tutor.save();
+            
+            if (tutor.isModified()) {
+                res.json({
+                    message: 'ok data saved timeslot',
+                    tutor
+                });
+            } else {
+                res.json({
+                    message: 'No changes were made to timeslot',
+                    tutor
+                });
+            }
+        }else{
+            res.json({
+                message:'error in mongoDb'
+            })
+            return;
+        }
+    } catch (error) {
+        console.log(error)
+        res.json({
+            message:'server error'
+        })
+        return;
+    }
+}
+
+exports.googleAuthCheckStudent = async (req, res) => {
+    console.log('inside google auth tutor entry')
+    console.log(req.body)
+    const {email } = req.body;
+    try {
+        const tutorData = await students.findOne({ email: email });
+        if(tutorData){
+            console.log(tutorData,'this is tutor data')
+            if (tutorData.is_blocked == true) {
+                res.json({ message: 'error' });
+                return;
+              }else{
+                  res.json({
+                      message:"success"
+                  })
+                  return;
+              }
+        }else{
+            res.json({
+                message:'notFound'
+            })
+        }
+    } catch (error) {
+        console.log(error);
+        req.json({
+            message:'serverError'
+        })
+    }
+}
+
+exports.studentLogin = async (req, res) => {
+    const {email, password} = req.body;
+    try {
+        const studentData = await students.findOne({ email: email });
+        if (studentData.is_blocked == true) {
+          res.json({ error: 'error' });
+          return;
+        }
+        const passwordMatch = await bcrypt.compare(password, studentData.password);
+        if (passwordMatch) {
+          console.log('student password matching');
+          res.json({
+            success: true,
+            tutorDetail: studentData,
+            role: 'tutor'
+          });
+          return;
+        }else{
+            res.json({
+                message:false
+            })
+            return;
+        }
+    } catch (error) {
+        console.log(error);
+        res.json({
+            message:'server error'
+        })
     }
 }

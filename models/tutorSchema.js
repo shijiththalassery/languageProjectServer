@@ -56,20 +56,10 @@ const tutorSchema = new mongoose.Schema({
     role: {
         type: String
     },
-    availableTime: [{
-        type: Number,
-    }],
-    bookedTime: {
-        type: Object,
-        required: true,
-    },
     is_premium:{
         type:Boolean,
         default : false,
     },
-    backgroundPhoto : {
-        type: String,
-    }
 })
 
 

@@ -8,16 +8,19 @@ const tutorController = require('../controllers/tutorController');
 const adminController = require('../controllers/adminController');
 
 router.post('/student/register', studentController.studentRegister);
+router.post('/studentLogin', studentController.studentLogin); 
+router.post('/googleAuthCheckStudent',studentController.googleAuthCheckStudent);
 router.post('/checkUser', userController.checkUser); 
 router.post('/userRegistration', userController.userRegistration); 
 router.post('/userLogin',userController.userLogin); 
 router.get('/tutorList',studentController.tutorList);
-router.get('/tutorDetail/:id',studentController.tutorDetail);
+router.get('/tutorDetails/:id',studentController.tutorDetail);
 router.get('/coursePurchase/:id',studentController.coursePurchase);
-
+router.post('/buyCourse',studentController.buyCourse);
 
 
 router.post('/TutorRegistration', tutorController.TutorRegistration);
+router.post('/tutorLogin', tutorController.tutorLogin);
 router.post('/tutorOtpVerification', tutorController.tutorOtpVerification);
 router.post('/tutorVerification', tutorController.tutorVerification);
 router.get('/languageList',tutorController.languageList);
@@ -25,6 +28,8 @@ router.get('/tutorDetail/:email',tutorController.tutorDetail);
 router.post('/tutorPremiumPurchase',tutorController.tutorPremiumPurchase);
 router.post('/tutorProfileEdit',tutorController.tutorProfileEdit);
 router.post('/tutorPremuimSetUp',tutorController.tutorPremuimSetUp);
+router.post('/googleAuthCheckTutuor',tutorController.googleAuthCheckTutuor);
+
 
 router.post('/adminLogin',adminController.adminLogin)
 router.get('/adminTutorList',adminController.tutorList)

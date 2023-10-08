@@ -127,7 +127,6 @@ exports.userLogin = async (req, res) => {
     console.log(req.body, 'this is req.body');
 
     if (role == 'student') {
-      console.log('entering student if block');
       const studentData = await students.findOne({ email: userMail });
       if (studentData.is_blocked == true) {
         res.json({ error: 'You are blocked. Please contact admin' });
