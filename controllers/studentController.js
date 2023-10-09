@@ -133,42 +133,61 @@ exports.buyCourse = async (req, res) => {
     const objectId = new mongoose.Types.ObjectId(tutorId);
     console.log(objectId)
     try {
-        const tutor = await tutors.findById(objectId);
-        console.log(tutor)
-        if (tutor) {
-            for (const day in userSelectedTime) {
-                const time = userSelectedTime[day];
-                if (tutor.timeSlot[day]) {
-                    tutor.timeSlot[day] = tutor.timeSlot[day].filter((t) => t !== time);
-                }
-                // if (tutor.bookedTime[day]) {
-                //     // Day exists in bookedTime, push the time to the array
-                //     tutor.bookedTime[day].push(time);
-                //   } else {
-                //     // Day doesn't exist in bookedTime, create a new array with the time
-                //     tutor.bookedTime[day] = [time];
-                //   }
-            }
-    
-            await tutor.save();
-            
-            if (tutor.isModified()) {
+        const studentData = await students.findOne({email:userId})
+        studentData.tutor = objectId;
+        studentData.selectedTime = userSelectedTime ;
+        await studentData.save();
+            if (studentData.isModified()) {
                 res.json({
                     message: 'ok data saved timeslot',
-                    tutor
+                    studentData
                 });
+                return;
             } else {
                 res.json({
                     message: 'No changes were made to timeslot',
-                    tutor
+                    studentData
                 });
+                return;
             }
-        }else{
-            res.json({
-                message:'error in mongoDb'
-            })
-            return;
-        }
+
+        console.log(studentData)
+        const tutor = await tutors.findById(objectId);
+        console.log(tutor)
+        // if (tutor) {
+        //     for (const day in userSelectedTime) {
+        //         const time = userSelectedTime[day];
+        //         if (tutor.timeSlot[day]) {
+        //             tutor.timeSlot[day] = tutor.timeSlot[day].filter((t) => t !== time);
+        //         }
+        //         if (tutor.bookedTime[day]) {
+        //             // Day exists in bookedTime, push the time to the array
+        //             tutor.bookedTime[day].push(time);
+        //           } else {
+        //             // Day doesn't exist in bookedTime, create a new array with the time
+        //             tutor.bookedTime[day] = [time];
+        //           }
+        //     }
+    
+        //     await tutor.save();
+            
+        //     if (tutor.isModified()) {
+        //         res.json({
+        //             message: 'ok data saved timeslot',
+        //             tutor
+        //         });
+        //     } else {
+        //         res.json({
+        //             message: 'No changes were made to timeslot',
+        //             tutor
+        //         });
+        //     }
+        // }else{
+        //     res.json({
+        //         message:'error in mongoDb'
+        //     })
+        //     return;
+        // }
     } catch (error) {
         console.log(error)
         res.json({
@@ -237,4 +256,45 @@ exports.studentLogin = async (req, res) => {
             message:'server error'
         })
     }
+}
+
+exports.studentDetail = async(req, res) => {
+    console.log(req.params.email,'this api is from student detail   ');
+    const email = req.params.email
+    const emails = JSON.parse(email)
+    try {
+        const studentDetail = await students.findOne({email:emails});
+        if(studentDetail){
+            const tutorEmail = await tutors.findById(studentDetail.tutor)
+            if(tutorEmail){
+                res.json({
+                    message:studentDetail,
+                    education:tutorEmail
+                })
+                return;
+            }
+            res.json({
+                message:studentDetail
+            })
+            return;
+        }else{
+            res.json({
+                message:'no such student'
+            })
+        }
+    } catch (error) {
+        console.log(error);
+        res.json({
+            message:'servererror'
+        })
+    }
+}
+
+
+exports.studentProfileEdit = async(req, res) => {
+
+    console.log(req.body)
+    res.json({
+        message:'ok'
+    })
 }

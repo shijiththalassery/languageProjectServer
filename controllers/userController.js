@@ -102,13 +102,13 @@ exports.userRegistration = async (req, res) => {
         email: email,
         phone: mobileNumber,
         password: hPassword,
-        role: "student",
       });
       const storedData = await studentRegister.save();
       res.status(200).json({
         message: 'ok',
         data: storedData
       });
+      return;
     }
     else {
       console.log('data not saved')

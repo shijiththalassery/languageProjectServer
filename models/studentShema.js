@@ -21,11 +21,13 @@ const studentSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    photo: {
+    profilePhoto: {
         type: String,
+        default:"https://img.freepik.com/premium-vector/man-avatar-profile-picture-vector-illustration_268834-538.jpg"
     },
     backgroundPhoto: {
         type: String,
+        default:"https://wallpaper.dog/large/5492398.jpg"
     },
     role: {
         type: String,
