@@ -4,6 +4,8 @@ const bcrypt = require("bcryptjs");
 const Razorpay = require('razorpay');
 const shortid = require('shortid');
 const mongoose = require('mongoose');
+const cloudinary = require('../config/cloudinary');
+
 
 //hash password using bcrypt
 const securedPassword = async (password) => {
@@ -52,7 +54,12 @@ exports.studentRegister = async (req, res) => {
 
 exports.tutorList = async (req, res) => {
     try {
-        const tutorList = await tutors.find({ is_blocked: false });
+        const tutorList = await tutors.find({
+            $and: [
+              { is_blocked: false },
+              { is_verified: true }
+            ]
+          });
         if (tutorList) {
             res.json(tutorList)
         } else {
@@ -259,7 +266,6 @@ exports.studentLogin = async (req, res) => {
 }
 
 exports.studentDetail = async(req, res) => {
-    console.log(req.params.email,'this api is from student detail   ');
     const email = req.params.email
     const emails = JSON.parse(email)
     try {
@@ -292,9 +298,56 @@ exports.studentDetail = async(req, res) => {
 
 
 exports.studentProfileEdit = async(req, res) => {
+    const {
+        existEmail,
+        name, 
+        email, 
+        number, 
+        profilePhoto, 
+        backgroundPhoto} = req.body ;
+        console.log(existEmail,'this is the email of the student')
+        const emailId = existEmail.replace(/"/g, '');
 
-    console.log(req.body)
-    res.json({
-        message:'ok'
-    })
+        try {
+            const profile = await cloudinary.uploader.upload(profilePhoto, {
+                folder: 'studentProfilePhoto',
+            });
+            const profileUrl = profile.secure_url;
+    
+            const background = await cloudinary.uploader.upload(backgroundPhoto, {
+                folder: 'studentBgPhoto',
+            });
+            const backgroundUrl = background.secure_url;
+    
+            const updateUser = await students.findOneAndUpdate(
+                { email: emailId  }, // The query to find the document
+                {
+                    $set: {
+                        name: name, // Replace newName with the new name value
+                        email: email, // Replace newEmail with the new email value
+                        phone: number,
+                        profilePhoto:profileUrl,// Replace newPhone with the new phone value
+                        backgroundPhoto:backgroundUrl
+                    },
+                },
+                { new: true } // To return the updated document (optional)
+            );
+            if (updateUser) {
+                res.json({
+                    message: 'ok'
+                })
+                return;
+            } else {
+                res.json({
+                    message: 'failed'
+                })
+                return;
+            }
+        } catch (error) {
+            console.log(error);
+            res.json({
+                message:'server error'
+            })
+            return;
+        }
 }

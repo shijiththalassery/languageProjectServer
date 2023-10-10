@@ -66,33 +66,33 @@ const securedPassword = async (password) => {
 }
 
 
-exports.tutorLogin = async(req, res) => {
-    const {email, password} = req.body;
+exports.tutorLogin = async (req, res) => {
+    const { email, password } = req.body;
     try {
         const tutorData = await tutors.findOne({ email: email });
         if (tutorData.is_blocked == true) {
-          res.json({ error: 'error' });
-          return;
+            res.json({ error: 'error' });
+            return;
         }
         const passwordMatch = await bcrypt.compare(password, tutorData.password);
         if (passwordMatch) {
-          console.log('student password matching');
-          res.json({
-            success: true,
-            tutorDetail: tutorData,
-            role: 'tutor'
-          });
-          return;
-        }else{
+            console.log('student password matching');
             res.json({
-                message:false
+                success: true,
+                tutorDetail: tutorData,
+                role: 'tutor'
+            });
+            return;
+        } else {
+            res.json({
+                message: false
             })
             return;
         }
     } catch (error) {
         console.log(error);
         res.json({
-            message:'server error'
+            message: 'server error'
         })
     }
 }
@@ -133,6 +133,7 @@ exports.TutorRegistration = async (req, res) => {
 }
 
 exports.tutorOtpVerification = async (req, res) => {
+    console.log('entering tutor registration')
     const generateOtp = myCache.data.tmyOtp.v;
     const { name,
         email,
@@ -146,17 +147,16 @@ exports.tutorOtpVerification = async (req, res) => {
         hour } = req.body;
     if (generateOtp === otp) {
         try {
-            const result = await cloudinary.uploader.upload(photo, {
-                folder: 'tutors',
-            });
-            const imageUrl = result.secure_url;
+            // const result = await cloudinary.uploader.upload(photo, {
+            //     folder: 'tutors',
+            // });
+            // const imageUrl = result.secure_url;
             const hPassword = await securedPassword(confirmPassword);
             const tutorRegister = new tutors({
                 name: name,
                 email: email,
                 phone: mobile,
                 password: hPassword,
-                photo: imageUrl,
                 language: language,
                 role: "tutor",
                 timeSlot: timeSlot,
@@ -170,6 +170,9 @@ exports.tutorOtpVerification = async (req, res) => {
             });
         } catch (error) {
             console.log(error)
+            res.json({
+                message: 'failed'
+            })
         }
     } else {
         res.json({
@@ -179,23 +182,15 @@ exports.tutorOtpVerification = async (req, res) => {
 }
 
 exports.tutorVerification = async (req, res,) => {
-    const { startTime, endTime, language, certificate, email } = req.body;
+    const { email } = req.body;
     const availableTime = []
     const stringWithQuotes = email;
     const emailId = stringWithQuotes.replace(/"/g, '');
     try {
-        const result = await cloudinary.uploader.upload(certificate);
-        const imageUrl = result.secure_url;
-        for (let i = startTime; i < endTime; i++) {
-            availableTime.push(parseInt(i))
-        }
         const updatedData = await tutors.findOneAndUpdate(
             { email: emailId },
             {
                 $set: {
-                    language: language,
-                    certificate: imageUrl,
-                    availableTime: availableTime,
                     file_submmitted: true,
                 },
             },
@@ -239,7 +234,7 @@ exports.tutorDetail = async (req, res) => {
     const email = req.params.email
     const stringWithQuotes = email;
     const emailId = stringWithQuotes.replace(/"/g, '');
-    console.log(email,'thsi is the email of the tutor')
+    console.log(email, 'thsi is the email of the tutor')
     try {
         const tutorDetail = await tutors.findOne({ email: email })
         if (tutorDetail) {
@@ -276,6 +271,7 @@ exports.tutorPremiumPurchase = async (req, res) => {
             currency: response.currency,
             amount: response.amount
         })
+        return;
     } catch (error) {
         console.log(error)
     }
@@ -283,14 +279,14 @@ exports.tutorPremiumPurchase = async (req, res) => {
 
 
 exports.tutorProfileEdit = async (req, res) => {
-    const { 
-        name, 
-        email, 
-        phone, 
-        password, 
-        confPassword ,
-        profilePhoto, 
-        backgroundPhoto} = req.body;
+    const {
+        name,
+        email,
+        phone,
+        password,
+        confPassword,
+        profilePhoto,
+        backgroundPhoto } = req.body;
     console.log(profilePhoto, backgroundPhoto, 'these are the user edit data from edit profile')
     const hPassword = await securedPassword(password);
     try {
@@ -312,8 +308,8 @@ exports.tutorProfileEdit = async (req, res) => {
                     email: email, // Replace newEmail with the new email value
                     phone: phone,
                     password: hPassword,
-                    profilePhoto:profileUrl,// Replace newPhone with the new phone value
-                    backgroundPhoto:backgroundUrl
+                    profilePhoto: profileUrl,// Replace newPhone with the new phone value
+                    backgroundPhoto: backgroundUrl
                 },
             },
             { new: true } // To return the updated document (optional)
@@ -328,15 +324,19 @@ exports.tutorProfileEdit = async (req, res) => {
             })
         }
     } catch (error) {
-
+        console.log(error);
+        res.json({
+            message: 'server error'
+        })
     }
 }
 
 exports.tutorPremuimSetUp = async (req, res) => {
+    console.log('entering tutorPremuimSetUp')
     const { email } = req.body;
     console.log(email)
     try {
-        const data = await tutors.findOne({email:email});
+        const data = await tutors.findOne({ email: email });
         console.log(data.name, data.email, 'these are the data from api')
         const updateUser = await tutors.findOneAndUpdate(
             { email: email },
@@ -348,7 +348,7 @@ exports.tutorPremuimSetUp = async (req, res) => {
             { new: true }
         );
         if (updateUser) {
-            console.log(updateUser.is_premium,'this is the updated user')
+            console.log(updateUser.is_premium, 'this is the updated user')
             res.json({
                 message: 'ok',
             })
@@ -364,32 +364,32 @@ exports.tutorPremuimSetUp = async (req, res) => {
 }
 
 
-exports.googleAuthCheckTutuor = async (req, res)=>{
+exports.googleAuthCheckTutuor = async (req, res) => {
     console.log('inside google auth tutor entry')
     console.log(req.body)
-    const {email } = req.body;
+    const { email } = req.body;
     try {
         const tutorData = await tutors.findOne({ email: email });
-        if(tutorData){
-            console.log(tutorData,'this is tutor data')
+        if (tutorData) {
+            console.log(tutorData, 'this is tutor data')
             if (tutorData.is_blocked == true) {
                 res.json({ message: 'error' });
                 return;
-              }else{
-                  res.json({
-                      message:"success"
-                  })
-                  return;
-              }
-        }else{
+            } else {
+                res.json({
+                    message: "success"
+                })
+                return;
+            }
+        } else {
             res.json({
-                message:'notFound'
+                message: 'notFound'
             })
         }
     } catch (error) {
         console.log(error);
         req.json({
-            message:'serverError'
+            message: 'serverError'
         })
     }
 }
