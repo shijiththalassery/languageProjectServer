@@ -238,6 +238,7 @@ exports.studentLogin = async (req, res) => {
     const {email, password} = req.body;
     try {
         const studentData = await students.findOne({ email: email });
+        console.log(studentData,'this is the student dadta')
         if (studentData.is_blocked == true) {
           res.json({ error: 'error' });
           return;

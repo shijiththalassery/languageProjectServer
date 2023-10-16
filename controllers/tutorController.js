@@ -206,7 +206,7 @@ exports.tutorVerification = async (req, res,) => {
             console.error('Document not found');
         }
         let message = 'user send a certificate'
-        req.app.io.emit('connection', message);
+        req.app.io.emit('profile:verificatioin', message);
     } catch (error) {
         console.log(error)
     }
