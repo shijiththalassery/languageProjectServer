@@ -5,6 +5,8 @@ const Razorpay = require('razorpay');
 const shortid = require('shortid');
 const mongoose = require('mongoose');
 const cloudinary = require('../config/cloudinary');
+const { ObjectId } = require('mongodb');
+
 
 
 //hash password using bcrypt
@@ -56,10 +58,10 @@ exports.tutorList = async (req, res) => {
     try {
         const tutorList = await tutors.find({
             $and: [
-              { is_blocked: false },
-              { is_verified: true }
+                { is_blocked: false },
+                { is_verified: true }
             ]
-          });
+        });
         if (tutorList) {
             res.json(tutorList)
         } else {
@@ -136,27 +138,27 @@ exports.coursePurchase = async (req, res) => {
 exports.buyCourse = async (req, res) => {
 
     const { userSelectedTime, tutorId, userId } = req.body;
-    console.log(userSelectedTime, tutorId, userId,'this is back end data')
+    console.log(userSelectedTime, tutorId, userId, 'this is back end data')
     const objectId = new mongoose.Types.ObjectId(tutorId);
     console.log(objectId)
     try {
-        const studentData = await students.findOne({email:userId})
+        const studentData = await students.findOne({ email: userId })
         studentData.tutor = objectId;
-        studentData.selectedTime = userSelectedTime ;
+        studentData.selectedTime = userSelectedTime;
         await studentData.save();
-            if (studentData.isModified()) {
-                res.json({
-                    message: 'ok data saved timeslot',
-                    studentData
-                });
-                return;
-            } else {
-                res.json({
-                    message: 'No changes were made to timeslot',
-                    studentData
-                });
-                return;
-            }
+        if (studentData.isModified()) {
+            res.json({
+                message: 'ok data saved timeslot',
+                studentData
+            });
+            return;
+        } else {
+            res.json({
+                message: 'No changes were made to timeslot',
+                studentData
+            });
+            return;
+        }
 
         console.log(studentData)
         const tutor = await tutors.findById(objectId);
@@ -175,9 +177,9 @@ exports.buyCourse = async (req, res) => {
         //             tutor.bookedTime[day] = [time];
         //           }
         //     }
-    
+
         //     await tutor.save();
-            
+
         //     if (tutor.isModified()) {
         //         res.json({
         //             message: 'ok data saved timeslot',
@@ -198,7 +200,7 @@ exports.buyCourse = async (req, res) => {
     } catch (error) {
         console.log(error)
         res.json({
-            message:'server error'
+            message: 'server error'
         })
         return;
     }
@@ -207,148 +209,218 @@ exports.buyCourse = async (req, res) => {
 exports.googleAuthCheckStudent = async (req, res) => {
     console.log('inside google auth tutor entry')
     console.log(req.body)
-    const {email } = req.body;
+    const { email } = req.body;
     try {
         const tutorData = await students.findOne({ email: email });
-        if(tutorData){
-            console.log(tutorData,'this is tutor data')
+        if (tutorData) {
+            console.log(tutorData, 'this is tutor data')
             if (tutorData.is_blocked == true) {
                 res.json({ message: 'error' });
                 return;
-              }else{
-                  res.json({
-                      message:"success"
-                  })
-                  return;
-              }
-        }else{
+            } else {
+                res.json({
+                    message: "success"
+                })
+                return;
+            }
+        } else {
             res.json({
-                message:'notFound'
+                message: 'notFound'
             })
         }
     } catch (error) {
         console.log(error);
         req.json({
-            message:'serverError'
+            message: 'serverError'
         })
     }
 }
 
 exports.studentLogin = async (req, res) => {
-    const {email, password} = req.body;
+    const { email, password } = req.body;
     try {
         const studentData = await students.findOne({ email: email });
-        console.log(studentData,'this is the student dadta')
+        console.log(studentData, 'this is the student dadta')
         if (studentData.is_blocked == true) {
-          res.json({ error: 'error' });
-          return;
+            res.json({ error: 'error' });
+            return;
         }
         const passwordMatch = await bcrypt.compare(password, studentData.password);
         if (passwordMatch) {
-          console.log('student password matching');
-          res.json({
-            success: true,
-            tutorDetail: studentData,
-            role: 'tutor'
-          });
-          return;
-        }else{
+            console.log('student password matching');
             res.json({
-                message:false
+                success: true,
+                tutorDetail: studentData,
+                role: 'tutor'
+            });
+            return;
+        } else {
+            res.json({
+                message: false
             })
             return;
         }
     } catch (error) {
         console.log(error);
         res.json({
-            message:'server error'
+            message: 'server error'
         })
     }
 }
 
-exports.studentDetail = async(req, res) => {
+exports.studentDetail = async (req, res) => {
     const email = req.params.email
     const emails = JSON.parse(email)
     try {
-        const studentDetail = await students.findOne({email:emails});
-        if(studentDetail){
+        const studentDetail = await students.findOne({ email: emails });
+        if (studentDetail) {
             const tutorEmail = await tutors.findById(studentDetail.tutor)
-            if(tutorEmail){
+            if (tutorEmail) {
                 res.json({
-                    message:studentDetail,
-                    education:tutorEmail
+                    message: studentDetail,
+                    education: tutorEmail
                 })
                 return;
             }
             res.json({
-                message:studentDetail
+                message: studentDetail
             })
             return;
-        }else{
+        } else {
             res.json({
-                message:'no such student'
+                message: 'no such student'
             })
         }
     } catch (error) {
         console.log(error);
         res.json({
-            message:'servererror'
+            message: 'servererror'
         })
     }
 }
 
 
-exports.studentProfileEdit = async(req, res) => {
+exports.studentProfileEdit = async (req, res) => {
     const {
         existEmail,
-        name, 
-        email, 
-        number, 
-        profilePhoto, 
-        backgroundPhoto} = req.body ;
-        console.log(existEmail,'this is the email of the student')
-        const emailId = existEmail.replace(/"/g, '');
+        name,
+        email,
+        number,
+        profilePhoto,
+        backgroundPhoto } = req.body;
+    console.log(existEmail, 'this is the email of the student')
+    const emailId = existEmail.replace(/"/g, '');
 
-        try {
-            const profile = await cloudinary.uploader.upload(profilePhoto, {
-                folder: 'studentProfilePhoto',
-            });
-            const profileUrl = profile.secure_url;
-    
-            const background = await cloudinary.uploader.upload(backgroundPhoto, {
-                folder: 'studentBgPhoto',
-            });
-            const backgroundUrl = background.secure_url;
-    
-            const updateUser = await students.findOneAndUpdate(
-                { email: emailId  }, // The query to find the document
-                {
-                    $set: {
-                        name: name, // Replace newName with the new name value
-                        email: email, // Replace newEmail with the new email value
-                        phone: number,
-                        profilePhoto:profileUrl,// Replace newPhone with the new phone value
-                        backgroundPhoto:backgroundUrl
-                    },
+    try {
+        const profile = await cloudinary.uploader.upload(profilePhoto, {
+            folder: 'studentProfilePhoto',
+        });
+        const profileUrl = profile.secure_url;
+
+        const background = await cloudinary.uploader.upload(backgroundPhoto, {
+            folder: 'studentBgPhoto',
+        });
+        const backgroundUrl = background.secure_url;
+
+        const updateUser = await students.findOneAndUpdate(
+            { email: emailId }, // The query to find the document
+            {
+                $set: {
+                    name: name, // Replace newName with the new name value
+                    email: email, // Replace newEmail with the new email value
+                    phone: number,
+                    profilePhoto: profileUrl,// Replace newPhone with the new phone value
+                    backgroundPhoto: backgroundUrl
                 },
-                { new: true } // To return the updated document (optional)
-            );
-            if (updateUser) {
+            },
+            { new: true } // To return the updated document (optional)
+        );
+        if (updateUser) {
+            res.json({
+                message: 'ok'
+            })
+            return;
+        } else {
+            res.json({
+                message: 'failed'
+            })
+            return;
+        }
+    } catch (error) {
+        console.log(error);
+        res.json({
+            message: 'server error'
+        })
+        return;
+    }
+}
+
+exports.listOfTutor = async (req, res) => {
+    const email = req.params.email;
+    try {
+        const user = await students.find({ email: email })
+        if (user) {
+            const tutorId = user[0].tutor;
+            const tutorList = await tutors.findById(tutorId)
+            console.log(tutorList, 'this is tutor list form sreya shijith')
+            if (tutorList) {
                 res.json({
-                    message: 'ok'
+                    message: tutorList
                 })
                 return;
             } else {
                 res.json({
-                    message: 'failed'
+                    message: 'no tutor for this student'
                 })
-                return;
+                return
             }
-        } catch (error) {
-            console.log(error);
+        } else {
             res.json({
-                message:'server error'
+                message: 'no such user'
             })
             return;
         }
+    } catch (error) {
+        console.log(error);
+        res.json({
+            message: 'serverError',
+            error: error
+        })
+        return;
+    }
+}
+
+exports.reviewPost = async (req, res) => {
+    const objectId = new ObjectId(req.body.tutorId);
+    const review = {
+        email: req.body.email,
+        name: req.body.name,
+        review: req.body.review,
+    }
+
+    try {
+        const user = await tutors.findOne({ 'reviews.email': req.body.email }).exec();
+        if (user) {
+            res.json({
+                message: 'done it'
+            })
+        } else {
+            const tutorReviewUpdate = await tutors.findOneAndUpdate(
+                { _id: objectId },
+                {
+                    $push: { reviews: review },
+                },
+                { new: true },
+            );
+            console.log(tutorReviewUpdate)
+            res.json({
+                message: 'success'
+            })
+        }
+    } catch (error) {
+        console.log(error)
+        res.json({
+            message:'serverError'
+        })
+    }
 }

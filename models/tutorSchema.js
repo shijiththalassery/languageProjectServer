@@ -60,6 +60,20 @@ const tutorSchema = new mongoose.Schema({
         type:Boolean,
         default : false,
     },
+    reviews: [
+        {
+            email:{
+                type:String
+            },
+            name:{
+                type:String
+            },
+            review:{
+                type:String
+            }
+        }
+  ],
+
 })
 
 
