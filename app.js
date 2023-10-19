@@ -12,7 +12,11 @@ const bodyParser = require('body-parser');
 const { Server } = require('socket.io'); // Import Server from socket.io
 const handlebars = require('handlebars')
 const cookieParser = require('cookie-parser');  
-
+const { 
+  addUser, 
+  removeUser, 
+  getUser, 
+  getRoomUsers } = require("./entity");
 
 
 app.use(bodyParser.json({ limit: '200mb' }));
@@ -51,6 +55,8 @@ app.use((req, res, next) => {
   req.io = io;
   next();
 });
+
+ /////video call //////
 
 io.on('profile:verificatioin', (socket) => {
   console.log('A user connected');
@@ -93,6 +99,50 @@ io.on("connection", (socket) => {
     io.to(to).emit("peer:nego:final", { from: socket.id, ans });
   });
 });
+/////////END OF VIDEO CALL //////
+
+//////// START OF CHAT //////////
+
+io.on('connect',(socket) => {
+  
+
+  socket.on('join',({user,room},callback) => {
+    console.log(user,room,'this is the room and userrs')
+      const {response , error} = addUser({id: socket.id , user:user, room: room})
+
+      console.log(response)
+
+      if(error) {
+        callback(error)
+        return;
+      }
+      socket.join(response.room);
+      socket.emit('message', { user: 'admin' , text: `Welcome ${response.user} ` });
+      socket.broadcast.to(response.room).emit('message', { user: 'admin', text : `${response.user} has joined` })
+
+      io.to(response.room).emit('roomMembers', getRoomUsers(response.room))
+  })
+
+  socket.on('sendMessage',(message,callback) => {
+    
+      const user = getUser(socket.id)
+
+      io.to(user.room).emit('message',{ user: user.user, text : message })
+
+      callback()
+  })
+
+  socket.on('disconnects',() => {
+    console.log("User disconnected");
+    const user = removeUser(socket.id);
+
+    if(user) {
+      io.to(user.room).emit('message',{ user: 'admin', text : `${user.user} has left` })
+    }
+  })
+})
+
+//////// END OF CHAT  //////////
 
 server.listen(PORT, () => {
   console.log(`Server is started at Port no: ${PORT}`);
