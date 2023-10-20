@@ -242,6 +242,10 @@ exports.tutorDetail = async (req, res) => {
                 message: 'success',
                 detail: tutorDetail
             })
+        }else{
+            res.json({
+                message:'no such tutor'
+            })
         }
 
     } catch (error) {
