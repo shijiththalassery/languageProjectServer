@@ -107,6 +107,8 @@ exports.TutorRegistration = async (req, res) => {
     const value = tutorData;
     const tutorDetails = myCache.set(key, value, cacheDuration);
 
+
+
     const tOtpNumber = Math.floor(100000 + Math.random() * 900000).toString();
     const otp = "tmyOtp";
     const number = tOtpNumber;
@@ -135,6 +137,7 @@ exports.TutorRegistration = async (req, res) => {
 exports.tutorOtpVerification = async (req, res) => {
     console.log('entering tutor registration')
     const generateOtp = myCache.data.tmyOtp.v;
+    console.log(generateOtp,'this is otp of the tutor')
     const { name,
         email,
         mobile,
@@ -283,6 +286,7 @@ exports.tutorPremiumPurchase = async (req, res) => {
 
 
 exports.tutorProfileEdit = async (req, res) => {
+    console.log('tutor edit ')
     const {
         name,
         email,
@@ -291,6 +295,7 @@ exports.tutorProfileEdit = async (req, res) => {
         confPassword,
         profilePhoto,
         backgroundPhoto } = req.body;
+        console.log(req.body,'this is the body of the ')
     console.log(profilePhoto, backgroundPhoto, 'these are the user edit data from edit profile')
     const hPassword = await securedPassword(password);
     try {
