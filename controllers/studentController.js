@@ -54,28 +54,55 @@ exports.studentRegister = async (req, res) => {
     }
 }
 
+
+
+
+
+
+
 exports.tutorList = async (req, res) => {
-    try {
-        const tutorList = await tutors.find({
-            $and: [
-                { is_blocked: false },
-                { is_verified: true }
-            ]
-        });
-        if (tutorList) {
-            res.json(tutorList)
-        } else {
-            res.json({
-                message: 'there is no tutor'
-            })
-        }
-    } catch (error) {
-        console.log(error);
-        res.json({
-            message: 'server error',
-        })
+
+    let tutorList= {}
+
+    console.log(req.query,'thsi is the quwery from front end');
+
+    const {langTypes, sortTypes, search} = req.query;
+
+    let query = {
+        is_verified:true,
+        is_blocked:false
     }
+
+    if(search){
+        query.name = search;
+    }
+
+    if(langTypes){
+        query.language = langTypes;
+    }
+
+    if(sortTypes){
+        let sortDirection = 1
+        if(sortTypes == 'descending'){
+            sortDirection = -1
+        }
+       tutorList = await tutors.find(query).sort({price:sortDirection})
+       res.json(tutorList)
+    }else{
+        tutorList = await tutors.find(query)
+        res.json(tutorList)
+    }
+
+
 }
+
+
+
+
+
+
+
+
 
 exports.tutorDetail = async (req, res) => {
     const id = req.params.id;
