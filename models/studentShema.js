@@ -31,13 +31,26 @@ const studentSchema = new mongoose.Schema({
     },
     role: {
         type: String,
+        default:'student'
     },
-    tutor:{
-        type:mongoose.Schema.Types.ObjectId,
-    },
-    selectedTime:{
-        type:Object,
-    }
+    course: [
+        {
+            tutorId:{
+                type:mongoose.Schema.Types.ObjectId
+            },
+            selectedTime:{
+                type:Number
+            },
+            language:{
+                type:String
+            },
+            isActive:{
+                type:Boolean,
+                default:true
+            }
+        }
+  ],
+
 })
 
 const students = new mongoose.model('students', studentSchema)

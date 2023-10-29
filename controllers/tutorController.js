@@ -65,34 +65,106 @@ const securedPassword = async (password) => {
     }
 }
 
+const createTimeSlote = (startTime, endTime) => {
+    const timeSlote = []
+    if (startTime.includes('am') && endTime.includes('pm')) {
+        if (parseInt(endTime) !== 12) {
+
+            end = 12 + parseInt(endTime)
+            start = parseInt(startTime)
+            for (let i = start; i < end; i++) {
+                timeSlote.push(i)
+            }
+            return timeSlote;
+
+        } else {
+            //end time is 12 pm
+            end = 12;
+            start = parseInt(startTime)
+            for (let i = start; i < end; i++) {
+                timeSlote.push(i)
+            }
+            return timeSlote;
+        }
+    }
+    else if (startTime.includes('am') && endTime.includes('am')) {
+
+        if (parseInt(endTime) !== 12) {
+            end = parseInt(endTime)
+            start = parseInt(startTime)
+            for (let i = start; i < end; i++) {
+                timeSlote.push(i)
+            }
+            return timeSlote;
+        } else {
+            end = 24
+            start = parseInt(startTime)
+            for (let i = start; i < end; i++) {
+                timeSlote.push(i)
+            }
+            return timeSlote;
+        }
+
+    }
+    else if (startTime.includes('pm') && endTime.includes('pm')) {
+
+        if (parseInt(startTime) !== 12) {
+
+            start = 12 + parseInt(startTime)
+            end = 12 + parseInt(endTime)
+            for (let i = start; i < end; i++) {
+                timeSlote.push(i)
+            }
+            return timeSlote;
+
+        } else {
+            start = 12;
+            end = 12 + parseInt(endTime)
+            for (let i = start; i < end; i++) {
+                timeSlote.push(i)
+            }
+            return timeSlote;
+        }
+    }
+
+}
 
 exports.tutorLogin = async (req, res) => {
+    console.log('inside tutor login')
     const { email, password } = req.body;
+    console.log(email)
     try {
         const tutorData = await tutors.findOne({ email: email });
-        if (tutorData.is_blocked == true) {
-            res.json({ error: 'error' });
-            return;
-        }
-        const passwordMatch = await bcrypt.compare(password, tutorData.password);
-        if (passwordMatch) {
-            console.log('student password matching');
+        if(tutorData){
+            if (tutorData.is_blocked == true) {
+                res.json({ error: 'error' });
+                return;
+            }else{
+                const passwordMatch = await bcrypt.compare(password, tutorData.password);
+                if (passwordMatch) {
+                    console.log('student password matching');
+                    res.json({
+                        success: true,
+                        tutorDetail: tutorData,
+                        role: 'tutor'
+                    });
+                    return;
+                }else{
+                    res.json({
+                        message:'email or password is not matching'
+                    })
+                }
+            }
+        }else{
             res.json({
-                success: true,
-                tutorDetail: tutorData,
-                role: 'tutor'
-            });
-            return;
-        } else {
-            res.json({
-                message: false
+                message:'there no such data'
             })
-            return;
         }
+
     } catch (error) {
         console.log(error);
         res.json({
-            message: 'server error'
+            message: 'serverError'
         })
     }
 }
@@ -138,22 +210,28 @@ exports.tutorOtpVerification = async (req, res) => {
     console.log('entering tutor registration')
     const generateOtp = myCache.data.tmyOtp.v;
     console.log(generateOtp,'this is otp of the tutor')
-    const { name,
+    console.log(req.body)
+
+    const {
+        name,
         email,
         mobile,
         language,
-        photo,
+        profilePhoto,
+        password,
         confirmPassword,
-        otp,
-        timeSlot,
         price,
-        hour } = req.body;
-    if (generateOtp === otp) {
+        startingTime,
+        endingTime,
+        otp
+    } = req.body
+    const timeSlot = createTimeSlote(startingTime,endingTime)
+     if (generateOtp === otp) {
         try {
-            // const result = await cloudinary.uploader.upload(photo, {
-            //     folder: 'tutors',
-            // });
-            // const imageUrl = result.secure_url;
+            const result = await cloudinary.uploader.upload(profilePhoto, {
+                folder: 'tutors',
+            });
+            const imageUrl = result.secure_url;
             const hPassword = await securedPassword(confirmPassword);
             const tutorRegister = new tutors({
                 name: name,
@@ -161,10 +239,9 @@ exports.tutorOtpVerification = async (req, res) => {
                 phone: mobile,
                 password: hPassword,
                 language: language,
-                role: "tutor",
                 timeSlot: timeSlot,
-                totalTime: hour,
                 price: price,
+                profilePhoto:imageUrl,
             });
             const storedData = await tutorRegister.save();
             res.status(200).json({
@@ -259,6 +336,8 @@ exports.tutorDetail = async (req, res) => {
 
 
 exports.tutorPremiumPurchase = async (req, res) => {
+
+    console.log('inside premium purchase')
     const payment_capture = 1
     const amount = 990
     const currency = 'INR'

@@ -62,46 +62,39 @@ exports.studentRegister = async (req, res) => {
 
 exports.tutorList = async (req, res) => {
 
-    let tutorList= {}
+    let tutorList = {}
 
-    console.log(req.query,'thsi is the quwery from front end');
+    console.log(req.query, 'thsi is the quwery from front end');
 
-    const {langTypes, sortTypes, search} = req.query;
+    const { langTypes, sortTypes, search } = req.query;
 
     let query = {
-        is_verified:true,
-        is_blocked:false
+        is_verified: true,
+        is_blocked: false
     }
 
-    if(search){
+    if (search) {
         query.name = search;
     }
 
-    if(langTypes){
+    if (langTypes) {
         query.language = langTypes;
     }
 
-    if(sortTypes){
+    if (sortTypes) {
         let sortDirection = 1
-        if(sortTypes == 'descending'){
+        if (sortTypes == 'descending') {
             sortDirection = -1
         }
-       tutorList = await tutors.find(query).sort({price:sortDirection})
-       res.json(tutorList)
-    }else{
+        tutorList = await tutors.find(query).sort({ price: sortDirection })
+        res.json(tutorList)
+    } else {
         tutorList = await tutors.find(query)
         res.json(tutorList)
     }
 
 
 }
-
-
-
-
-
-
-
 
 
 exports.tutorDetail = async (req, res) => {
@@ -163,71 +156,22 @@ exports.coursePurchase = async (req, res) => {
 
 
 exports.buyCourse = async (req, res) => {
+    const {
+        studentSelectedTime,
+        tutorId,
+        language,
+        studentEmail,
+        price
+    } = req.body;
 
-    const { userSelectedTime, tutorId, userId } = req.body;
-    console.log(userSelectedTime, tutorId, userId, 'this is back end data')
-    const objectId = new mongoose.Types.ObjectId(tutorId);
-    console.log(objectId)
     try {
-        const studentData = await students.findOne({ email: userId })
-        studentData.tutor = objectId;
-        studentData.selectedTime = userSelectedTime;
-        await studentData.save();
-        if (studentData.isModified()) {
-            res.json({
-                message: 'ok data saved timeslot',
-                studentData
-            });
-            return;
-        } else {
-            res.json({
-                message: 'No changes were made to timeslot',
-                studentData
-            });
-            return;
-        }
-
-        console.log(studentData)
-        const tutor = await tutors.findById(objectId);
-        console.log(tutor)
-        // if (tutor) {
-        //     for (const day in userSelectedTime) {
-        //         const time = userSelectedTime[day];
-        //         if (tutor.timeSlot[day]) {
-        //             tutor.timeSlot[day] = tutor.timeSlot[day].filter((t) => t !== time);
-        //         }
-        //         if (tutor.bookedTime[day]) {
-        //             // Day exists in bookedTime, push the time to the array
-        //             tutor.bookedTime[day].push(time);
-        //           } else {
-        //             // Day doesn't exist in bookedTime, create a new array with the time
-        //             tutor.bookedTime[day] = [time];
-        //           }
-        //     }
-
-        //     await tutor.save();
-
-        //     if (tutor.isModified()) {
-        //         res.json({
-        //             message: 'ok data saved timeslot',
-        //             tutor
-        //         });
-        //     } else {
-        //         res.json({
-        //             message: 'No changes were made to timeslot',
-        //             tutor
-        //         });
-        //     }
-        // }else{
-        //     res.json({
-        //         message:'error in mongoDb'
-        //     })
-        //     return;
-        // }
+        const tutorData = await tutors.findById(tutorId);
+        const studentData = await students.findOne({email:studentEmail})
+  
     } catch (error) {
         console.log(error)
         res.json({
-            message: 'server error'
+            message:'server Error'
         })
         return;
     }
@@ -447,7 +391,7 @@ exports.reviewPost = async (req, res) => {
     } catch (error) {
         console.log(error)
         res.json({
-            message:'serverError'
+            message: 'serverError'
         })
     }
 }

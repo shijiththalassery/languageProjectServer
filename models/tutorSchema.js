@@ -21,14 +21,13 @@ const tutorSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    totalTime: {
-        type: Number,
-        required: true,
-    },
-    timeSlot: {
-        type: Object,
-        required: true,
-    },
+
+    timeSlot: [Number],
+
+    bookeyTime: [Number],
+
+    availableTime: [Number],
+
     price: {
         type: Number,
         required: true
@@ -45,7 +44,8 @@ const tutorSchema = new mongoose.Schema({
         type: String
     },
     backgroundPhoto: {
-        type: String
+        type: String,
+        default: 'https://cdn.wallpapersafari.com/62/90/owk8QH.jpg'
     },
     language: {
         type: String
@@ -53,26 +53,39 @@ const tutorSchema = new mongoose.Schema({
     certificate: {
         type: String
     },
-    role: {
-        type: String
-    },
-    is_premium:{
-        type:Boolean,
-        default : false,
+    is_premium: {
+        type: Boolean,
+        default: false,
     },
     reviews: [
         {
-            email:{
-                type:String
+            email: {
+                type: String
             },
-            name:{
-                type:String
+            name: {
+                type: String
             },
-            review:{
-                type:String
+            review: {
+                type: String
             }
         }
-  ],
+    ],
+    student: [
+        {
+            email: {
+                type: String
+            },
+            time: {
+                type: Number
+            },
+            isActive: {
+                type: Boolean
+            },
+            Price: {
+                type: Number
+            },
+        }
+    ],
 
 })
 
@@ -81,3 +94,17 @@ const tutors = new mongoose.model("tutors", tutorSchema);
 
 
 module.exports = tutors;
+
+
+await User.findByIdAndUpdate(
+    userId,
+    {
+        $push: {
+            cart: {
+                product: product._id,
+                quantity: 1
+            }
+        }
+    },
+    { new: true }
+)
