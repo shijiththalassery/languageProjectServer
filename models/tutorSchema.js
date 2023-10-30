@@ -24,7 +24,7 @@ const tutorSchema = new mongoose.Schema({
 
     timeSlot: [Number],
 
-    bookeyTime: [Number],
+    bookedTime: [Number],
 
     availableTime: [Number],
 
@@ -57,6 +57,38 @@ const tutorSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    students: [
+        {
+            email: {
+                type: String
+            },
+            time: {
+                type: Number
+            },
+            origianlTime: {
+                type: String
+            },
+            isActive: {
+                type: Boolean,
+                default:true,
+            },
+            Price: {
+                type: Number
+            },
+            purchaseDate:{
+                type:String
+            },
+            endDate:{
+                type:String
+            },
+            Name:{
+                type:String
+            },
+            roomNo:{
+                type:String
+            }
+        }
+    ],
     reviews: [
         {
             email: {
@@ -67,25 +99,11 @@ const tutorSchema = new mongoose.Schema({
             },
             review: {
                 type: String
-            }
-        }
-    ],
-    student: [
-        {
-            email: {
-                type: String
-            },
-            time: {
-                type: Number
-            },
-            isActive: {
-                type: Boolean
-            },
-            Price: {
-                type: Number
             },
         }
     ],
+
+
 
 })
 
@@ -96,15 +114,3 @@ const tutors = new mongoose.model("tutors", tutorSchema);
 module.exports = tutors;
 
 
-await User.findByIdAndUpdate(
-    userId,
-    {
-        $push: {
-            cart: {
-                product: product._id,
-                quantity: 1
-            }
-        }
-    },
-    { new: true }
-)

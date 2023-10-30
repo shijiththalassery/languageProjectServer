@@ -19,6 +19,16 @@ const securedPassword = async (password) => {
     }
 }
 
+function generateRandomString(length) {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+      const randomIndex = Math.floor(Math.random() * characters.length);
+      result += characters.charAt(randomIndex);
+    }
+    return result;
+  }
+  
 
 var razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY,
@@ -53,12 +63,6 @@ exports.studentRegister = async (req, res) => {
         res.status(400).json({ error: "Invalid Details", error })
     }
 }
-
-
-
-
-
-
 
 exports.tutorList = async (req, res) => {
 
@@ -161,17 +165,83 @@ exports.buyCourse = async (req, res) => {
         tutorId,
         language,
         studentEmail,
-        price
+        price,
+        stringTime
     } = req.body;
 
+    const roomNo = generateRandomString(10);
+    const currentDate = new Date();
+    const formattedDate = currentDate.toISOString().slice(0, 10);
+    const originalDate = new Date(formattedDate);
+    const newDate = new Date(originalDate);
+    newDate.setDate(originalDate.getDate() + 30);
+    const formattedNewDate = newDate.toISOString().slice(0, 10);
+
     try {
-        const tutorData = await tutors.findById(tutorId);
-        const studentData = await students.findOne({email:studentEmail})
-  
+
+        const updatedStudent = await students.findOneAndUpdate(
+            { email: studentEmail },
+            {
+                $push: {
+                    course: {
+                        tutorId: tutorId,
+                        selectedTime: studentSelectedTime,
+                        language: language,
+                        purchaseDate: formattedDate,
+                        endDate: formattedNewDate,
+                        origianlTime:stringTime,
+                        roomNo:roomNo
+                    }
+                }
+            },
+            { new: true }
+        );
+
+        let updatedTutor = await tutors.findByIdAndUpdate(
+            tutorId,
+            {
+                $push: {
+                    students: {
+                        email: studentEmail,
+                        time: parseInt(studentSelectedTime),
+                        Price: price,
+                        purchaseDate: formattedDate,
+                        endDate: formattedNewDate,
+                        Name:updatedStudent.name,
+                        origianlTime:stringTime,
+                        roomNo:roomNo
+                    },
+                },
+                $pull: {
+                    availableTime: studentSelectedTime
+                },
+            },
+
+        );
+
+        updatedTutor = await tutors.findByIdAndUpdate(
+            tutorId, {
+            $push: {
+                bookedTime: studentSelectedTime
+            }
+        },
+            { new: true }
+        );
+
+        if (updatedStudent && updatedTutor) {
+            res.json({
+                message: 'success',
+            })
+        } else {
+            res.json({
+                message: 'mongoError'
+            })
+        }
+
     } catch (error) {
         console.log(error)
         res.json({
-            message:'server Error'
+            message: 'serverError'
         })
         return;
     }
@@ -393,5 +463,23 @@ exports.reviewPost = async (req, res) => {
         res.json({
             message: 'serverError'
         })
+    }
+}
+
+exports.myTutorList = async(req, res)=>{
+
+    const email = req.params.email;
+    try {
+        const studentData = await students.findOne({email:email})
+        if(studentData){
+            res.json(studentData);
+            return
+        }else{
+            res.json('mongoError')
+        }
+    } catch (error) {
+        console.log(error);
+        res.json(serverError);
+        return;
     }
 }

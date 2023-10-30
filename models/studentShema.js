@@ -41,12 +41,24 @@ const studentSchema = new mongoose.Schema({
             selectedTime:{
                 type:Number
             },
+            origianlTime: {
+                type: String
+            },
             language:{
                 type:String
             },
             isActive:{
                 type:Boolean,
                 default:true
+            },
+            purchaseDate:{
+                type:String
+            },
+            endDate:{
+                type:String
+            },
+            roomNo:{
+                type:String
             }
         }
   ],

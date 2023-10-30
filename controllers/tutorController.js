@@ -481,3 +481,22 @@ exports.googleAuthCheckTutuor = async (req, res) => {
         })
     }
 }
+
+exports.studentList = async(req, res) =>{
+
+    const email = req.params.email;
+    try {
+        const tutorDetail = await tutors.findOne({email:email})
+        if(tutorDetail){
+            res.json(tutorDetail)
+        }
+        else{
+            res.json("mongoError")
+        }
+    } catch (error) {
+        console.log(error);
+        res.json('serverError');
+        return
+    }
+
+}
