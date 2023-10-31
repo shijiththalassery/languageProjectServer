@@ -1,6 +1,7 @@
 const express = require("express");
 const store = require('../middleware/multer')
 const router = express.Router(); // Initialize the router
+const protect = require('../middleware/authMiddleware')
 
 const studentController = require("../controllers/studentController");
 const userController = require("../controllers/userController");
@@ -28,14 +29,14 @@ router.get('/myTutorList/:email',studentController.myTutorList)
 router.post('/TutorRegistration', tutorController.TutorRegistration);
 router.post('/tutorLogin', tutorController.tutorLogin);
 router.post('/tutorOtpVerification', tutorController.tutorOtpVerification);
-router.post('/tutorVerification', tutorController.tutorVerification);
-router.get('/languageList',tutorController.languageList);
-router.get('/tutorDetail/:email',tutorController.tutorDetail);
-router.post('/tutorPremiumPurchase',tutorController.tutorPremiumPurchase);
-router.post('/tutorProfileEdit',tutorController.tutorProfileEdit);
-router.post('/tutorPremuimSetUp',tutorController.tutorPremuimSetUp);
-router.post('/googleAuthCheckTutuor',tutorController.googleAuthCheckTutuor);
-router.get('/studentList/:email',tutorController.studentList)
+router.post('/tutorVerification' , tutorController.tutorVerification);
+router.get('/languageList' ,tutorController.languageList);
+router.get('/tutorDetail/:email' ,tutorController.tutorDetail);
+router.post('/tutorPremiumPurchase' ,tutorController.tutorPremiumPurchase);
+router.post('/tutorProfileEdit' ,tutorController.tutorProfileEdit);
+router.post('/tutorPremuimSetUp' ,tutorController.tutorPremuimSetUp);
+router.post('/googleAuthCheckTutuor' ,tutorController.googleAuthCheckTutuor);
+router.get('/studentList/:email' ,tutorController.studentList)
 
 
 router.post('/adminLogin',adminController.adminLogin)

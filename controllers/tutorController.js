@@ -12,7 +12,9 @@ const path = require('path');
 const handlebars = require('handlebars');
 const nodemailer = require('nodemailer');
 const Razorpay = require('razorpay');
-const shortid = require('shortid')
+const shortid = require('shortid');
+const generateToken = require('../util/generateToken')
+const jwt = require('jsonwebtoken');
 
 
 var razorpay = new Razorpay({
@@ -135,29 +137,37 @@ exports.tutorLogin = async (req, res) => {
     console.log(email)
     try {
         const tutorData = await tutors.findOne({ email: email });
-        if(tutorData){
+        if (tutorData) {
             if (tutorData.is_blocked == true) {
                 res.json({ error: 'error' });
                 return;
-            }else{
+            } else {
                 const passwordMatch = await bcrypt.compare(password, tutorData.password);
                 if (passwordMatch) {
-                    console.log('student password matching');
+                    const token = jwt.sign(
+                        {
+                            _id: tutorData._id, // Include the MongoDB document ID
+                        },
+                        process.env.usertoken_secretKey,
+                        {
+                            expiresIn: "12h", // Set an expiration time for the token
+                        }
+                    );
                     res.json({
                         success: true,
                         tutorDetail: tutorData,
-                        role: 'tutor'
+                        token: token
                     });
                     return;
-                }else{
+                } else {
                     res.json({
-                        message:'email or password is not matching'
+                        message: 'email or password is not matching'
                     })
                 }
             }
-        }else{
+        } else {
             res.json({
-                message:'there no such data'
+                message: 'there no such data'
             })
         }
 
@@ -209,7 +219,7 @@ exports.TutorRegistration = async (req, res) => {
 exports.tutorOtpVerification = async (req, res) => {
     console.log('entering tutor registration')
     const generateOtp = myCache.data.tmyOtp.v;
-    console.log(generateOtp,'this is otp of the tutor')
+    console.log(generateOtp, 'this is otp of the tutor')
     console.log(req.body)
 
     const {
@@ -225,8 +235,8 @@ exports.tutorOtpVerification = async (req, res) => {
         endingTime,
         otp
     } = req.body
-    const timeSlot = createTimeSlote(startingTime,endingTime)
-     if (generateOtp === otp) {
+    const timeSlot = createTimeSlote(startingTime, endingTime)
+    if (generateOtp === otp) {
         try {
             const result = await cloudinary.uploader.upload(profilePhoto, {
                 folder: 'tutors',
@@ -241,7 +251,7 @@ exports.tutorOtpVerification = async (req, res) => {
                 language: language,
                 timeSlot: timeSlot,
                 price: price,
-                profilePhoto:imageUrl,
+                profilePhoto: imageUrl,
             });
             const storedData = await tutorRegister.save();
             res.status(200).json({
@@ -322,9 +332,9 @@ exports.tutorDetail = async (req, res) => {
                 message: 'success',
                 detail: tutorDetail
             })
-        }else{
+        } else {
             res.json({
-                message:'no such tutor'
+                message: 'no such tutor'
             })
         }
 
@@ -374,7 +384,7 @@ exports.tutorProfileEdit = async (req, res) => {
         confPassword,
         profilePhoto,
         backgroundPhoto } = req.body;
-        console.log(req.body,'this is the body of the ')
+    console.log(req.body, 'this is the body of the ')
     console.log(profilePhoto, backgroundPhoto, 'these are the user edit data from edit profile')
     const hPassword = await securedPassword(password);
     try {
@@ -482,15 +492,15 @@ exports.googleAuthCheckTutuor = async (req, res) => {
     }
 }
 
-exports.studentList = async(req, res) =>{
+exports.studentList = async (req, res) => {
 
     const email = req.params.email;
     try {
-        const tutorDetail = await tutors.findOne({email:email})
-        if(tutorDetail){
+        const tutorDetail = await tutors.findOne({ email: email })
+        if (tutorDetail) {
             res.json(tutorDetail)
         }
-        else{
+        else {
             res.json("mongoError")
         }
     } catch (error) {
