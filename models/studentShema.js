@@ -23,45 +23,70 @@ const studentSchema = new mongoose.Schema({
     },
     profilePhoto: {
         type: String,
-        default:"https://img.freepik.com/premium-vector/man-avatar-profile-picture-vector-illustration_268834-538.jpg"
+        default: "https://img.freepik.com/premium-vector/man-avatar-profile-picture-vector-illustration_268834-538.jpg"
     },
     backgroundPhoto: {
         type: String,
-        default:"https://wallpaper.dog/large/5492398.jpg"
+        default: "https://wallpaper.dog/large/5492398.jpg"
     },
     role: {
         type: String,
-        default:'student'
+        default: 'student'
     },
     course: [
         {
-            tutorId:{
-                type:mongoose.Schema.Types.ObjectId
+            tutorId: {
+                type: mongoose.Schema.Types.ObjectId
             },
-            selectedTime:{
-                type:Number
+            selectedTime: {
+                type: Number
             },
             origianlTime: {
                 type: String
             },
-            language:{
+            language: {
+                type: String
+            },
+            isActive: {
+                type: Boolean,
+                default: true
+            },
+            purchaseDate: {
+                type: String
+            },
+            endDate: {
+                type: String
+            },
+            roomNo: {
+                type: String
+            },
+
+        }
+    ],
+    assignment: [
+        {
+            tutorId: {
+                type: mongoose.Schema.Types.ObjectId
+            },
+            question:{
                 type:String
             },
-            isActive:{
+            answer:{
+                type:String
+            },
+            date:{
+                type:Date
+            },
+            verified:{
                 type:Boolean,
-                default:true
+                default:false
             },
-            purchaseDate:{
-                type:String
-            },
-            endDate:{
-                type:String
-            },
-            roomNo:{
-                type:String
+            submit:{
+                type:Boolean,
+                default:false
             }
         }
-  ],
+    ],
 
 })
 

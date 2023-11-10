@@ -15,6 +15,8 @@ const Razorpay = require('razorpay');
 const shortid = require('shortid');
 const generateToken = require('../util/generateToken')
 const jwt = require('jsonwebtoken');
+require("dotenv").config();
+
 
 
 var razorpay = new Razorpay({
@@ -148,7 +150,7 @@ exports.tutorLogin = async (req, res) => {
                         {
                             _id: tutorData._id, // Include the MongoDB document ID
                         },
-                        process.env.usertoken_secretKey,
+                        process.env.JWT_SECRET,
                         {
                             expiresIn: "12h", // Set an expiration time for the token
                         }
@@ -288,8 +290,6 @@ exports.tutorVerification = async (req, res,) => {
                 new: true,
             }
         );
-
-
         if (updatedData) {
             console.log('Updated document:', updatedData);
         } else {
@@ -320,14 +320,15 @@ exports.languageList = async (req, res) => {
     }
 }
 exports.tutorDetail = async (req, res) => {
-    console.log('inside the tutorDetail')
-    const email = req.params.email
+
+    const email = req.params.email;
     const stringWithQuotes = email;
     const emailId = stringWithQuotes.replace(/"/g, '');
     console.log(email, 'thsi is the email of the tutor')
     try {
         const tutorDetail = await tutors.findOne({ email: email })
         if (tutorDetail) {
+
             res.json({
                 message: 'success',
                 detail: tutorDetail
@@ -509,4 +510,18 @@ exports.studentList = async (req, res) => {
         return
     }
 
+}
+
+exports.submitQuestion = async (req, res) => {
+    const today = new Date();
+    const day = today.getDate();
+    const month = today.toLocaleString('default', { month: 'long' });
+    const year = today.getFullYear();
+    const formattedDate = `${day}-${month}-${year}`;
+
+    const { question } = req.body;
+    const tutorId = req.tutorId;
+    console.log(tutorId, question, formattedDate)
+
+    res.json('okey')
 }

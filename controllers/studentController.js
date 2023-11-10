@@ -6,6 +6,8 @@ const shortid = require('shortid');
 const mongoose = require('mongoose');
 const cloudinary = require('../config/cloudinary');
 const { ObjectId } = require('mongodb');
+const jwt = require('jsonwebtoken');
+require("dotenv").config();
 
 
 
@@ -23,12 +25,12 @@ function generateRandomString(length) {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';
     for (let i = 0; i < length; i++) {
-      const randomIndex = Math.floor(Math.random() * characters.length);
-      result += characters.charAt(randomIndex);
+        const randomIndex = Math.floor(Math.random() * characters.length);
+        result += characters.charAt(randomIndex);
     }
     return result;
-  }
-  
+}
+
 
 var razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY,
@@ -189,8 +191,8 @@ exports.buyCourse = async (req, res) => {
                         language: language,
                         purchaseDate: formattedDate,
                         endDate: formattedNewDate,
-                        origianlTime:stringTime,
-                        roomNo:roomNo
+                        origianlTime: stringTime,
+                        roomNo: roomNo
                     }
                 }
             },
@@ -207,9 +209,9 @@ exports.buyCourse = async (req, res) => {
                         Price: price,
                         purchaseDate: formattedDate,
                         endDate: formattedNewDate,
-                        Name:updatedStudent.name,
-                        origianlTime:stringTime,
-                        roomNo:roomNo
+                        Name: updatedStudent.name,
+                        origianlTime: stringTime,
+                        roomNo: roomNo
                     },
                 },
                 $pull: {
@@ -289,10 +291,20 @@ exports.studentLogin = async (req, res) => {
         const passwordMatch = await bcrypt.compare(password, studentData.password);
         if (passwordMatch) {
             console.log('student password matching');
+            const token = jwt.sign(
+                {
+                    _id: studentData._id, // Include the MongoDB document ID
+                },
+                process.env.STUDENT_SECRET_KEY,
+                {
+                    expiresIn: "12h", // Set an expiration time for the token
+                }
+            );
             res.json({
                 success: true,
                 tutorDetail: studentData,
-                role: 'tutor'
+                role: 'tutor',
+                studentToken:token
             });
             return;
         } else {
@@ -310,6 +322,9 @@ exports.studentLogin = async (req, res) => {
 }
 
 exports.studentDetail = async (req, res) => {
+
+    console.log('inside for navbar');
+    console.log(req.params.email, 'this is student my email')
     const email = req.params.email
     const emails = JSON.parse(email)
     try {
@@ -432,20 +447,38 @@ exports.listOfTutor = async (req, res) => {
 }
 
 exports.reviewPost = async (req, res) => {
-    const objectId = new ObjectId(req.body.tutorId);
-    const review = {
-        email: req.body.email,
-        name: req.body.name,
-        review: req.body.review,
-    }
+
+
+    console.log(req.body, 'this body')
+    const {
+        email,
+        tutorId,
+        review,
+        star
+    } = req.body
+    const objectId = new ObjectId(tutorId);
+    // console.log(objectId,'thsi is converted object id');
+    // console.log(tutorId,'thsi is id from bodoy')
 
     try {
-        const user = await tutors.findOne({ 'reviews.email': req.body.email }).exec();
+        const reviwer = await students.findOne({email:email})
+        console.log(reviwer,'this is reviewr')
+        const user = await tutors.findOne({ 'reviews.email': email }).exec();
+        console.log(user,'this is user')
         if (user) {
             res.json({
                 message: 'done it'
             })
         } else {
+            const review = {
+                email: req.body.email,
+                name: reviwer.name,
+                review: req.body.review,
+                stars:req.body.star
+            }
+            console.log(review,'this is review object');
+            const tutorShijth = await tutors.findById(tutorId)
+            console.log(tutorShijth,'this is tutor')
             const tutorReviewUpdate = await tutors.findOneAndUpdate(
                 { _id: objectId },
                 {
@@ -453,7 +486,7 @@ exports.reviewPost = async (req, res) => {
                 },
                 { new: true },
             );
-            console.log(tutorReviewUpdate)
+            console.log(tutorReviewUpdate,'this is updated user')
             res.json({
                 message: 'success'
             })
@@ -466,15 +499,15 @@ exports.reviewPost = async (req, res) => {
     }
 }
 
-exports.myTutorList = async(req, res)=>{
+exports.myTutorList = async (req, res) => {
 
     const email = req.params.email;
     try {
-        const studentData = await students.findOne({email:email})
-        if(studentData){
+        const studentData = await students.findOne({ email: email })
+        if (studentData) {
             res.json(studentData);
             return
-        }else{
+        } else {
             res.json('mongoError')
         }
     } catch (error) {

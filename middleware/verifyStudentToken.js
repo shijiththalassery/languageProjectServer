@@ -1,11 +1,11 @@
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
-const Tutor_Secret_key = process.env.TUTOR_SECRET_KEY;
-const Tutors = require("../models/tutorSchema");
+const Student_Secret_key = process.env.STUDENT_SECRET_KEY;
+const Student = require('../models/studentShema')
 
-const tutorVerification = async (req, res, next) => {
- 
+const studentVerification = async (req, res, next) => {
+  console.log('inside middle ware student verification')
   try {
     
     const authorizationHeader = req.headers.authorization;
@@ -16,10 +16,10 @@ const tutorVerification = async (req, res, next) => {
       return res.status(401).json({ message: "Authentication failed shijith" });
 
     } else {
-      
-      const decodedToken =  jwt.verify(token, process.env.TUTOR_SECRET_KEY );
+      console.log('token decode in lese')
+      const decodedToken =  jwt.verify(token, process.env.Student_Secret_key );
 
-      req.tutorId = decodedToken._id;
+      req.studentId = decodedToken._id;
     
       next();
     }
@@ -39,4 +39,4 @@ const tutorVerification = async (req, res, next) => {
 //   }
 // };
 
-module.exports = { tutorVerification,};
+module.exports = { studentVerification,};

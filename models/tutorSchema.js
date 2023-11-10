@@ -100,6 +100,9 @@ const tutorSchema = new mongoose.Schema({
             review: {
                 type: String
             },
+            stars:{
+                type:Number
+            }
         }
     ],
 
