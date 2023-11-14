@@ -4,6 +4,7 @@ const router = express.Router(); // Initialize the router
 const protect = require('../middleware/authMiddleware')
 const auth = require('../middleware/verifyTutorToken')
 const studentAuth = require('../middleware/verifyStudentToken')
+const adminAuth = require('../middleware/verifyAdminToken')
 
 
 
@@ -25,7 +26,7 @@ router.post('/buyCourse', studentController.buyCourse);  //PROTECTION NEEDED
 router.get('/studentDetail/:email', studentController.studentDetail); //PROTECTION NEEDED
 router.post('/studentProfileEdit', studentController.studentProfileEdit); //PROTECTION NEEDED
 router.get('/listOfTutor/:email', studentController.listOfTutor); //PROTECTION NEEDED
-router.post('/reviewPost',studentAuth.studentVerification , studentController.reviewPost); //PROTECTION NEEDED
+router.post('/reviewPost',studentAuth.studentVerification , studentController.reviewPost); 
 router.get('/myTutorList/:email', studentController.myTutorList) //PROTECTION NEEDED
 
 
@@ -42,7 +43,9 @@ router.post('/tutorProfileEdit', tutorController.tutorProfileEdit); // PROTECTIO
 router.post('/tutorPremuimSetUp', tutorController.tutorPremuimSetUp); // PROTECTION NEEDED
 router.post('/googleAuthCheckTutuor', tutorController.googleAuthCheckTutuor);
 router.get('/studentList/:email', tutorController.studentList) // PROTECTION NEEDED
-router.post('/submitQuestion',auth.tutorVerification,tutorController.submitQuestion)
+router.post('/submitQuestion',auth.tutorVerification, tutorController.submitQuestion)
+router.get('/tutorEarning',auth.tutorVerification,  tutorController.tutorEarning)
+router.post('/assignmentDetail',auth.tutorVerification, tutorController.assignmentDetail)
 
 
 router.post('/adminLogin', adminController.adminLogin)
@@ -56,6 +59,16 @@ router.post('/addLanguage', adminController.addLanguage)  // PROTECTION NEEDED
 router.get('/verificationList', adminController.verificationList)  // PROTECTION NEEDED
 router.put('/certificateApprove/:id', adminController.certificateApprove)   // PROTECTION NEEDED
 router.put('/certificateReject/:id', adminController.certificateReject)   // PROTECTION NEEDED
+router.get('/getChartData', adminController.chartData);
+
+// adminAuth.adminVerfication,
+
+
+
+
+
+
+
 
 
 

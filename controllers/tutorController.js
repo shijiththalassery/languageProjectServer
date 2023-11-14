@@ -518,10 +518,317 @@ exports.submitQuestion = async (req, res) => {
     const month = today.toLocaleString('default', { month: 'long' });
     const year = today.getFullYear();
     const formattedDate = `${day}-${month}-${year}`;
-
-    const { question } = req.body;
+    const { question, room } = req.body;
     const tutorId = req.tutorId;
-    console.log(tutorId, question, formattedDate)
 
-    res.json('okey')
+
+    const student = await students.findOne({ 'course.roomNo': room });
+
+    if (student) {
+        console.log(student)
+        const studentId = student._id;
+        const updatedStudent = await students.findOneAndUpdate(
+            {
+                _id: studentId,
+                'assignment.date': { $ne: formattedDate } // Check if the date is not equal
+            },
+            {
+                $push: {
+                    assignment: {
+                        tutorId: tutorId,
+                        question: question,
+                        date: formattedDate,
+                    }
+                }
+            },
+            { new: true }
+        );
+
+        if (updatedStudent) {
+            console.log('Assignment updated successfully');
+            console.log('Updated Student:');
+
+            const assignments = await students.find({
+                'assignment.tutorId': tutorId
+            }, {
+                'assignment.$': 1
+            });
+
+            if (assignments && assignments.length > 0) {
+                console.log('Assignments:', assignments);
+                res.json({
+                    message: 'updated',
+                    assignments: assignments,
+                })
+            } else {
+                console.log(`No assignments found for tutorId ${tutorId}`)
+                res.json({
+                    message: 'updated',
+                    assignments: 'some error'
+                });
+            }
+            res.json('updated')
+        } else {
+            console.log('Assignment not updated. Either student not found or date already exists.');
+            res.json('date is exist')
+        }
+
+    } else {
+        res.json('student not found')
+    }
+
+}
+
+exports.assignmentDetail = async (req, res) => {
+
+    const { room } = req.body;
+    const tutorId = req.tutorId;
+
+    try {
+        const assignments = await students.find({
+            'assignment.tutorId': tutorId,
+            'assignment': { $elemMatch: { 'tutorId': tutorId } }
+        }, {
+            'assignment.$': 1
+        });
+
+        if (assignments) {
+            const assignmentData = assignments[0].assignment;
+            console.log(assignmentData)
+            res.json(assignmentData)
+        } else {
+            res.json('noAssignment')
+        }
+    } catch (error) {
+        console.log(error);
+        res.json({
+            message: 'serverError',
+            error: erro
+        })
+    }
+
+}
+
+
+exports.tutorEarning = async (req, res) => {
+    console.log('entering tutor earning')
+
+    const tutorId = new mongoose.Types.ObjectId(req.tutorId);
+
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1;
+
+    try {
+        const totalStudent = await tutors.aggregate([
+            {
+                $match: {
+                    _id: tutorId
+                }
+            },
+            {
+                $project: {
+                    totalStudents: { $size: "$students" }
+                }
+            }
+        ]);
+
+        const activeStudentCount = await tutors.aggregate([
+            {
+                $match: {
+                    _id: tutorId
+                }
+            },
+            {
+                $unwind: "$students"
+            },
+            {
+                $match: {
+                    "students.isActive": true
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    totalActiveStudents: { $sum: 1 }
+                }
+            }
+        ]);
+
+        const totalActiveStudentsCount = activeStudentCount.length > 0 ? activeStudentCount[0].totalActiveStudents : 0;
+
+        const studentPerMonth = await tutors.aggregate([
+            {
+                $match: {
+                    _id: tutorId
+                }
+            },
+            {
+                $unwind: "$students"
+            },
+            {
+                $project: {
+                    month: {
+                        $dateToString: {
+                            format: "%m",
+                            date: {
+                                $dateFromString: {
+                                    dateString: "$students.purchaseDate",
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            {
+                $group: {
+                    _id: "$month",
+                    totalStudents: { $sum: 1 },
+                },
+            },
+            {
+                $project: {
+                    _id: 0,
+                    month: {
+                        $switch: {
+                            branches: [
+                                { case: { $eq: ["$_id", "01"] }, then: "January" },
+                                { case: { $eq: ["$_id", "02"] }, then: "February" },
+                                { case: { $eq: ["$_id", "03"] }, then: "March" },
+                                { case: { $eq: ["$_id", "04"] }, then: "April" },
+                                { case: { $eq: ["$_id", "05"] }, then: "May" },
+                                { case: { $eq: ["$_id", "06"] }, then: "June" },
+                                { case: { $eq: ["$_id", "07"] }, then: "July" },
+                                { case: { $eq: ["$_id", "08"] }, then: "August" },
+                                { case: { $eq: ["$_id", "09"] }, then: "September" },
+                                { case: { $eq: ["$_id", "10"] }, then: "October" },
+                                { case: { $eq: ["$_id", "11"] }, then: "November" },
+                                { case: { $eq: ["$_id", "12"] }, then: "December" },
+                            ],
+                            default: "Unknown",
+                        },
+                    },
+                    totalStudents: 1,
+                },
+            },
+            {
+                $sort: { month: 1 },
+            },
+        ]);
+
+        const pricePerMonth = await tutors.aggregate([
+            {
+                $match: {
+                    _id: tutorId
+                }
+            },
+            {
+                $unwind: "$students"
+            },
+            {
+                $project: {
+                    month: {
+                        $dateToString: {
+                            format: "%m", // Extracts the month's number
+                            date: {
+                                $dateFromString: {
+                                    dateString: "$students.purchaseDate",
+                                },
+                            },
+                        },
+                    },
+                    price: "$students.Price",
+                },
+            },
+            {
+                $group: {
+                    _id: "$month",
+                    totalPrice: { $sum: "$price" },
+                },
+            },
+            {
+                $project: {
+                    _id: 0,
+                    month: {
+                        $switch: {
+                            branches: [
+                                { case: { $eq: ["$_id", "01"] }, then: "January" },
+                                { case: { $eq: ["$_id", "02"] }, then: "February" },
+                                { case: { $eq: ["$_id", "03"] }, then: "March" },
+                                { case: { $eq: ["$_id", "04"] }, then: "April" },
+                                { case: { $eq: ["$_id", "05"] }, then: "May" },
+                                { case: { $eq: ["$_id", "06"] }, then: "June" },
+                                { case: { $eq: ["$_id", "07"] }, then: "July" },
+                                { case: { $eq: ["$_id", "08"] }, then: "August" },
+                                { case: { $eq: ["$_id", "09"] }, then: "September" },
+                                { case: { $eq: ["$_id", "10"] }, then: "October" },
+                                { case: { $eq: ["$_id", "11"] }, then: "November" },
+                                { case: { $eq: ["$_id", "12"] }, then: "December" },
+                            ],
+                            default: "Unknown",
+                        },
+                    },
+                    totalPrice: 1,
+                },
+            },
+            {
+                $sort: { month: 1 }, // Optionally, sort by month name
+            },
+        ]);
+
+        let totalEarning
+        if (pricePerMonth && pricePerMonth.length > 0) {
+            totalEarning = pricePerMonth.reduce((accumulator, currentValue) => {
+                return accumulator + currentValue.totalPrice;
+            }, 0);
+        }
+
+        const result = await tutors.aggregate([
+            {
+                $match: {
+                    _id: tutorId
+                }
+            },
+            {
+                $unwind: "$students"
+            },
+            {
+                $match: {
+                    "students.purchaseDate": {
+                        $gte: new Date(`${currentDate.getFullYear()}-${currentMonth}-01`),
+                        $lt: new Date(`${currentDate.getFullYear()}-${currentMonth + 1}-01`)
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    total: { $sum: "$students.Price" }
+                }
+            }
+        ]);
+
+        console.log(result)
+        let currentMonthEarning;
+        if (result.length > 0) {
+            currentMonthEarning = result[0].total;
+        } else {
+            currentMonthEarning = 0
+        }
+        console.log(currentMonthEarning, 'thi i current month erning')
+
+        res.json({
+            totalActiveStudentsCount,
+            totalStudent,
+            studentPerMonth,
+            pricePerMonth,
+            totalEarning,
+            currentMonthEarning,
+            check: true
+        })
+    } catch (error) {
+        console.log(error);
+        res.json('serverError')
+    }
+
+
 }

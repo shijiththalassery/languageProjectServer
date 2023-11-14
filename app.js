@@ -147,6 +147,91 @@ io.on('connect',(socket) => {
 
 //////// END OF CHAT  //////////
 
+////////MESSAGE //////////
+
+io.on("connection", (socket) => {
+  socket.on("listMessages", async (data) => {
+    try {
+      const { bookingId } = data;
+      // Retrieve messages from MongoDB
+      const messages = await messageModel.findOne({ bookingId: bookingId });
+
+      // Emit the messages to the client
+      socket.emit("messageList", messages);
+    } catch (err) {
+      console.error(err);
+    }
+  });
+  socket.on("addMessage", async (data) => {
+    try {
+      const { bookingId, userId,partnerId, message, currentUserId } = data;
+      const messageExist = await messageModel.findOne({ bookingId: bookingId });
+
+      const user = await User.findOne({_id:currentUserId});
+      if (user) {
+        var userName = user.name;
+      }
+
+      const partner = await Partner.findOne({_id:currentUserId});
+      if (partner) {
+        var userName = partner.name;
+      }
+
+      if (messageExist) {
+        const newMessage = {
+          text: message,
+          sender: currentUserId, 
+          userName: userName,
+        };
+
+        const updateResult = await messageModel.updateOne(
+          { bookingId: bookingId },
+          {
+            $push: {
+              messages: newMessage,
+            },
+          }
+        );
+        // console.log(updateResult, "---------updateResult----------");
+      } else {
+        const newMessage = new messageModel({
+          bookingId:new ObjectId(bookingId), // Replace with the actual Booking ID
+          userId:new ObjectId(userId), // Replace with the actual User ID
+          partnerId:new ObjectId(partnerId), // Replace with the actual Vendor ID
+          // room:roomName,
+          messages: [
+            {
+              text: message,
+              sender: currentUserId, // Replace with the sender's ID
+              userName: userName,
+            },
+            // Add more messages as needed
+          ],
+        });
+        console.log(newMessage,"--new Message");
+
+        newMessage
+          .save()
+          .then((savedMessage) => {
+            console.log("Message saved:", savedMessage);
+            // Handle the success case
+          })
+          .catch((error) => {
+            console.error("Error saving message:", error);
+            // Handle the error case
+          });
+      }
+      // Emit the "messageAdded" event to all connected sockets
+      io.emit("messageAdded");
+    } catch (err) {
+      console.error(err);
+    }
+
+  });
+});
+
+//////////END MESSAGE /////
+
 server.listen(PORT, () => {
   console.log(`Server is started at Port no: ${PORT}`);
 });

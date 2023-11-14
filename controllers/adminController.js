@@ -8,6 +8,9 @@ const fs = require('fs');
 const path = require('path');
 const handlebars = require('handlebars');
 const nodemailer = require('nodemailer');
+const jwt = require('jsonwebtoken');
+const languages = require("../models/languageSchema");
+require("dotenv").config();
 
 
 
@@ -80,16 +83,32 @@ const successMail = async (username, email) => {
 
 const adminCredential = {
     userName: 'admin@gmail.com',
-    password: 1234
+    password: 1234,
+    _id: 9544345344
 }
 
 
 exports.adminLogin = async (req, res) => {
+
+    console.log('inside admin login')
     const { name, password } = req.body;
     console.log(password, adminCredential.password)
     if (adminCredential.userName == name && adminCredential.password == password) {
-        console.log('inside successfull')
-        res.status(200).json('success')
+        const token = jwt.sign(
+            {
+                _id: adminCredential._id,
+            },
+            process.env.ADMIN_SECRET_KEY,
+            {
+                expiresIn: "12h",
+            }
+        );
+        res.json({
+            success: true,
+            adminToken: token
+        });
+        return;
+
     }
     else {
         console.log('inside fail')
@@ -121,7 +140,7 @@ exports.tutorBlock = async (req, res) => {
             { new: true }
         );
         if (updateUser) {
-            console.log(tutorsData,'before update', updateUser,'after update')
+            console.log(tutorsData, 'before update', updateUser, 'after update')
             res.json({
                 message: 'tutor blocked successfully'
             })
@@ -150,7 +169,7 @@ exports.tutorUnBlock = async (req, res) => {
                 { new: true }
             );
             if (updateUser) {
-                console.log(tutorsData,'before update', updateUser,'after update')
+                console.log(tutorsData, 'before update', updateUser, 'after update')
                 res.json({
                     message: 'tutor unblocked successfully'
                 })
@@ -318,6 +337,7 @@ exports.certificateApprove = async (req, res) => {
     }
 
 }
+
 exports.certificateReject = async (req, res) => {
     const recievedId = req.params.id
     try {
@@ -339,5 +359,352 @@ exports.certificateReject = async (req, res) => {
 
     } catch (error) {
 
+    }
+}
+
+
+exports.chartData = async (req, res) => {
+
+    try {
+        const studentCount = await lang.aggregate([
+            {
+                $project: {
+                    language: "$language",
+                    arrayLength: { $size: "$students" }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    stats: { $push: { language: "$language", arrayLength: "$arrayLength" } }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    stats: 1
+                }
+            }
+        ]);
+
+        const tutorCount = await lang.aggregate([
+            {
+                $project: {
+                    language: "$language",
+                    arrayLength: { $size: "$tutor" }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    stats: { $push: { language: "$language", arrayLength: "$arrayLength" } }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    stats: 1
+                }
+            }
+        ]);
+
+
+        const result = await tutors.aggregate([
+            {
+                $match: {
+                    "students.purchaseDate": { $exists: true, $ne: null },
+                },
+            },
+            {
+                $unwind: "$students",
+            },
+            {
+                $addFields: {
+                    purchaseMonth: {
+                        $month: {
+                            $dateFromString: {
+                                dateString: "$students.purchaseDate",
+                            },
+                        },
+                    },
+                },
+            },
+            {
+                $group: {
+                    _id: "$purchaseMonth",
+                    totalStudents: { $sum: 1 },
+                },
+            },
+            {
+                $sort: {
+                    _id: 1, // Sort by month in ascending order
+                },
+            },
+            {
+                $project: {
+                    _id: 0,
+                    month: "$_id",
+                    totalStudents: 1,
+                },
+            },
+        ]);
+
+        const studentPerLanguage = studentCount[0].stats;
+        const tutorPerLanguage = tutorCount[0].stats;
+
+        const monthResult = await tutors.aggregate([
+            {
+                $match: {
+                    "students.purchaseDate": { $exists: true, $ne: null },
+                },
+            },
+            {
+                $unwind: "$students",
+            },
+            {
+                $addFields: {
+                    purchaseMonth: {
+                        $dateToString: {
+                            format: "%Y-%m", // Format as "YYYY-MM"
+                            date: {
+                                $dateFromString: {
+                                    dateString: "$students.purchaseDate",
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            {
+                $group: {
+                    _id: "$purchaseMonth",
+                    totalStudents: { $sum: 1 },
+                },
+            },
+            {
+                $sort: {
+                    _id: 1, // Sort by month in ascending order
+                },
+            },
+            {
+                $project: {
+                    _id: 0,
+                    month: "$_id",
+                    totalStudents: 1,
+                },
+            },
+        ]);
+
+
+        const studentPerMonthjoin = await tutors.aggregate([
+            {
+                $match: {
+                    "students.purchaseDate": { $exists: true, $ne: null },
+                },
+            },
+            {
+                $unwind: "$students",
+            },
+            {
+                $addFields: {
+                    purchaseMonth: {
+                        $dateToString: {
+                            format: "%m", // Extracts the month's number
+                            date: {
+                                $dateFromString: {
+                                    dateString: "$students.purchaseDate",
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            {
+                $group: {
+                    _id: "$purchaseMonth",
+                    totalStudents: { $sum: 1 },
+                },
+            },
+            {
+                $sort: {
+                    _id: 1,
+                },
+            },
+            {
+                $project: {
+                    _id: 0,
+                    month: {
+                        $switch: {
+                            branches: [
+                                { case: { $eq: ["$_id", "01"] }, then: "January" },
+                                { case: { $eq: ["$_id", "02"] }, then: "February" },
+                                { case: { $eq: ["$_id", "03"] }, then: "March" },
+                                { case: { $eq: ["$_id", "04"] }, then: "April" },
+                                { case: { $eq: ["$_id", "05"] }, then: "May" },
+                                { case: { $eq: ["$_id", "06"] }, then: "June" },
+                                { case: { $eq: ["$_id", "07"] }, then: "July" },
+                                { case: { $eq: ["$_id", "08"] }, then: "August" },
+                                { case: { $eq: ["$_id", "09"] }, then: "September" },
+                                { case: { $eq: ["$_id", "10"] }, then: "October" },
+                                { case: { $eq: ["$_id", "11"] }, then: "November" },
+                                { case: { $eq: ["$_id", "12"] }, then: "December" },
+                            ],
+                            default: "Unknown",
+                        },
+                    },
+                    totalStudents: 1,
+                },
+            },
+        ]);
+
+
+
+        const monthlyTotalPrice = await tutors.aggregate([
+            {
+                $unwind: "$students"
+            },
+            {
+                $match: {
+                    "students.purchaseDate": { $exists: true, $ne: null }
+                }
+            },
+            {
+                $addFields: {
+                    purchaseMonth: {
+                        $dateToString: {
+                            format: "%m",
+                            date: {
+                                $dateFromString: {
+                                    dateString: "$students.purchaseDate"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: "$purchaseMonth",
+                    total: {
+                        $sum: "$students.Price"
+                    }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    month: {
+                        $switch: {
+                            branches: [
+                                { case: { $eq: ["$_id", "01"] }, then: "January" },
+                                { case: { $eq: ["$_id", "02"] }, then: "February" },
+                                { case: { $eq: ["$_id", "03"] }, then: "March" },
+                                { case: { $eq: ["$_id", "04"] }, then: "April" },
+                                { case: { $eq: ["$_id", "05"] }, then: "May" },
+                                { case: { $eq: ["$_id", "06"] }, then: "June" },
+                                { case: { $eq: ["$_id", "07"] }, then: "July" },
+                                { case: { $eq: ["$_id", "08"] }, then: "August" },
+                                { case: { $eq: ["$_id", "09"] }, then: "September" },
+                                { case: { $eq: ["$_id", "10"] }, then: "October" },
+                                { case: { $eq: ["$_id", "11"] }, then: "November" },
+                                { case: { $eq: ["$_id", "12"] }, then: "December" }
+                            ],
+                            default: "$_id"
+                        }
+                    },
+                    total: "$total"
+                }
+            }
+        ]);
+
+        const totalPrice = await tutors.aggregate([
+            {
+                $unwind: "$students"
+            },
+            {
+                $match: {
+                    "students.purchaseDate": { $exists: true, $ne: null }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    totalPrice: { $sum: "$students.Price" }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    totalPrice: 1
+                }
+            }
+        ]);
+
+
+        const totalUsers = await languages.aggregate([
+            {
+                $project: {
+                    totalStudents: { $size: '$students' },
+                    totalTutors: { $size: '$tutor' },
+                },
+            },
+        ]);
+
+        let overallTotalStudents = 0;
+        let overallTotalTutors = 0;
+
+        if (totalUsers.length > 0) {
+            totalUsers.forEach((language) => {
+                overallTotalStudents += language.totalStudents;
+                overallTotalTutors += language.totalTutors;
+            });
+        }
+
+        const totalPremiumTutors = await tutors.countDocuments({ is_premium: true });
+
+        const overeallTotalPrice = totalPrice[0].totalPrice;
+
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth() + 1; 
+
+        const thisMonthRevenueObject = await tutors.aggregate([
+            {
+              $unwind: "$students"
+            },
+            {
+              $match: {
+                "students.purchaseDate": {
+                  $regex: new RegExp(`^\\d{4}-${currentMonth.toString().padStart(2, '0')}`)
+                }
+              }
+            },
+            {
+              $group: {
+                _id: "$_id",
+                totalAmount: { $sum: "$students.Price" }
+              }
+            }
+          ]);
+          
+
+          thisMonthRevenue = thisMonthRevenueObject[0].totalAmount
+
+    
+        res.json(
+            {
+                studentPerLanguage,
+                tutorPerLanguage,
+                studentPerMonthjoin,
+                monthlyTotalPrice,
+                overeallTotalPrice,
+                overallTotalTutors,
+                overallTotalStudents,
+                totalPremiumTutors,
+                thisMonthRevenue
+            }
+        )
+
+    } catch (error) {
+        console.log(error)
     }
 }
