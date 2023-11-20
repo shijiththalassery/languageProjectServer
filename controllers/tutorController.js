@@ -588,13 +588,13 @@ exports.assignmentDetail = async (req, res) => {
         const assignments = await students.find({
             'assignment.tutorId': tutorId,
             'assignment': { $elemMatch: { 'tutorId': tutorId } }
-        }, {
-            'assignment.$': 1
-        });
+        },);
 
         if (assignments) {
+
             const assignmentData = assignments[0].assignment;
-            console.log(assignmentData)
+            const arrayOfNumbers = assignmentData.map(innerArray => innerArray[0]);
+            console.log(assignmentData, 56)
             res.json(assignmentData)
         } else {
             res.json('noAssignment')
@@ -603,7 +603,7 @@ exports.assignmentDetail = async (req, res) => {
         console.log(error);
         res.json({
             message: 'serverError',
-            error: erro
+            error: error
         })
     }
 
@@ -831,4 +831,44 @@ exports.tutorEarning = async (req, res) => {
     }
 
 
+}
+
+exports.assignmentVerification = async (req, res) => {
+
+    const assignmentId = req.params.id;
+    const room = req.params.room
+
+    try {
+        const student = await students.findOne({ 'course.roomNo': room });
+        if (student) {
+            const studentId = student._id;
+            const updatedStudent = await students.findOneAndUpdate(
+                {
+                    _id: studentId,
+                    'assignment._id': assignmentId,
+                },
+                {
+                    $set: {
+                        'assignment.$.verified': true,
+                    },
+                },
+                { new: true }
+            );
+            if (!updatedStudent) {
+                res.json('verificatio is failed');
+                return;
+            } else {
+                res.json('verification is completed');
+                return;
+            }
+
+        } else {
+            res.json('assignemnt data is not found');
+            return
+        }
+    } catch (error) {
+        console.log(error)
+        res.json('serverError')
+    }
+    res.json('okey sreya shijith')
 }

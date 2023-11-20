@@ -20,7 +20,6 @@ const studentVerification = async (req, res, next) => {
       const decodedToken =  jwt.verify(token, process.env.Student_Secret_key );
 
       req.studentId = decodedToken._id;
-    
       next();
     }
   } catch (error) {

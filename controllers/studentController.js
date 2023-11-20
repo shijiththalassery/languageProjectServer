@@ -80,18 +80,26 @@ exports.tutorList = async (req, res) => {
     }
 
     if (search) {
-        query.name = search;
+        // query.name = search;
+        //    query.name = search;
+        //   query.name = { $regex: new RegExp(search, "i") };
+        query.name = { $regex: new RegExp(`.*${search}.*`, "i") };
     }
 
     if (langTypes) {
+        console.log(langTypes,'this is language type')
         query.language = langTypes;
+        
     }
 
     if (sortTypes) {
-        let sortDirection = 1
-        if (sortTypes == 'descending') {
-            sortDirection = -1
+        console.log(sortTypes,'this is sort tyep')
+        let sortDirection = 1; // Default to ascending
+
+        if (sortTypes === "Descending") {
+          sortDirection = -1;
         }
+  
         tutorList = await tutors.find(query).sort({ price: sortDirection })
         res.json(tutorList)
     } else {
@@ -124,41 +132,41 @@ exports.tutorDetail = async (req, res) => {
     }
 }
 
-exports.coursePurchase = async (req, res) => {
-    const id = req.params.id;
-    let amount;
-    try {
-        const tutorDetail = await tutors.findById(id);
-        if (tutorDetail) {
-            amount = tutorDetail.price;
-        }
-    } catch (error) {
-        console.log(error)
-    }
-    const payment_capture = 1
+// exports.coursePurchase = async (req, res) => {
+//     const id = req.params.id;
+//     let amount;
+//     try {
+//         const tutorDetail = await tutors.findById(id);
+//         if (tutorDetail) {
+//             amount = tutorDetail.price;
+//         }
+//     } catch (error) {
+//         console.log(error)
+//     }
+//     const payment_capture = 1
 
-    const currency = 'INR'
+//     const currency = 'INR'
 
-    const options = {
-        amount: amount * 100,
-        currency,
-        receipt: shortid.generate(),
-        payment_capture
-    }
+//     const options = {
+//         amount: amount * 100,
+//         currency,
+//         receipt: shortid.generate(),
+//         payment_capture
+//     }
 
-    try {
-        const response = await razorpay.orders.create(options);
-        console.log('this is the line')
-        console.log(response)
-        res.json({
-            id: response.id,
-            currency: response.currency,
-            amount: response.amount
-        })
-    } catch (error) {
-        console.log(error)
-    }
-}
+//     try {
+//         const response = await razorpay.orders.create(options);
+//         console.log('this is the line')
+//         console.log(response)
+//         res.json({
+//             id: response.id,
+//             currency: response.currency,
+//             amount: response.amount
+//         })
+//     } catch (error) {
+//         console.log(error)
+//     }
+// }
 
 
 exports.buyCourse = async (req, res) => {
@@ -304,7 +312,7 @@ exports.studentLogin = async (req, res) => {
                 success: true,
                 tutorDetail: studentData,
                 role: 'tutor',
-                studentToken:token
+                studentToken: token
             });
             return;
         } else {
@@ -461,10 +469,10 @@ exports.reviewPost = async (req, res) => {
     // console.log(tutorId,'thsi is id from bodoy')
 
     try {
-        const reviwer = await students.findOne({email:email})
-        console.log(reviwer,'this is reviewr')
+        const reviwer = await students.findOne({ email: email })
+        console.log(reviwer, 'this is reviewr')
         const user = await tutors.findOne({ 'reviews.email': email }).exec();
-        console.log(user,'this is user')
+        console.log(user, 'this is user')
         if (user) {
             res.json({
                 message: 'done it'
@@ -474,11 +482,11 @@ exports.reviewPost = async (req, res) => {
                 email: req.body.email,
                 name: reviwer.name,
                 review: req.body.review,
-                stars:req.body.star
+                stars: req.body.star
             }
-            console.log(review,'this is review object');
+            console.log(review, 'this is review object');
             const tutorShijth = await tutors.findById(tutorId)
-            console.log(tutorShijth,'this is tutor')
+            console.log(tutorShijth, 'this is tutor')
             const tutorReviewUpdate = await tutors.findOneAndUpdate(
                 { _id: objectId },
                 {
@@ -486,7 +494,7 @@ exports.reviewPost = async (req, res) => {
                 },
                 { new: true },
             );
-            console.log(tutorReviewUpdate,'this is updated user')
+            console.log(tutorReviewUpdate, 'this is updated user')
             res.json({
                 message: 'success'
             })
@@ -515,4 +523,108 @@ exports.myTutorList = async (req, res) => {
         res.json(serverError);
         return;
     }
+}
+
+exports.myAssignment = async (req, res) => {
+
+    const { room, email } = req.body;
+
+    try {
+        const student = await students.findOne(
+            {
+                _id: req.studentId,
+                'course.roomNo': room,
+            },
+            {
+                'course.$': 1,
+            }
+        );
+
+        if (student) {
+
+            const tutorId = student.course[0].tutorId;
+
+            const assignments = await students.find(
+                {
+                    _id: req.studentId,
+                    'assignment.tutorId': tutorId,
+                }
+            );
+
+            if (assignments && assignments.length > 0) {
+                console.log(558,assignments)
+                const assignment = assignments[0].assignment;
+                console.log(560,assignment)
+                res.json(assignment)
+                return;
+
+            } else {
+
+                console.log('No assignment found.');
+                res.json("No assignment found.")
+                return;
+            }
+
+        } else {
+
+            res.json('there is no tutor id or assignment');
+            return;
+        }
+    } catch (error) {
+        console.log(error);
+        res.json("serverError")
+        return;
+    }
+
+}
+
+exports.submitAssignemnt = async( req, res) => {
+
+    console.log('inside submit')
+    console.log(req.body)
+
+  const {data, room,  assignmentId} = req.body;
+  try {
+    const student = await students.findOne(
+        {
+            _id: req.studentId,
+            'course.roomNo': room,
+        },
+        {
+            'course.$': 1,
+        }
+    );
+    if (student) {
+        const tutorId = student.course[0].tutorId;
+        const updatedStudent = await students.findOneAndUpdate(
+            {
+              _id: req.studentId,
+              'assignment._id': assignmentId,
+            },
+            {
+              $set: {
+                'assignment.$.answer': data,
+                'assignment.$.submit': true, 
+              },
+            },
+            { new: true }
+          );
+          if (!updatedStudent) {
+            console.log("Student or assignment not found");
+            res.json('Student or assignment not found')
+            return
+          }else{
+            res.json('assignment successfully updated')
+          }
+
+    }else{
+        res.json('there is no tutor for you')
+        return;
+    }
+    
+  } catch (error) {
+    console.log(error);
+    res.json('serverError')
+  }
+    // res.json('okey shijit')
 }
