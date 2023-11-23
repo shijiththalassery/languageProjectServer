@@ -36,7 +36,7 @@ router.post('/TutorRegistration', tutorController.TutorRegistration);
 router.post('/tutorLogin', tutorController.tutorLogin); 
 router.post('/tutorOtpVerification', tutorController.tutorOtpVerification); 
 router.post('/tutorVerification',auth.tutorVerification, tutorController.tutorVerification); 
-router.get('/languageList',auth.tutorVerification, tutorController.languageList); 
+router.get('/languageList', tutorController.languageList); 
 router.get('/tutorDetail/:email', auth.tutorVerification, tutorController.tutorDetail);
 router.post('/tutorPremiumPurchase', tutorController.tutorPremiumPurchase); // PROTECTION NEEDED need to be change
 router.post('/tutorProfileEdit',auth.tutorVerification, tutorController.tutorProfileEdit); // PROTECTION NEEDED failed updating
