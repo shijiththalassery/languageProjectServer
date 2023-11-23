@@ -11,18 +11,26 @@ const studentVerification = async (req, res, next) => {
     const authorizationHeader = req.headers.authorization;
 
     const token = authorizationHeader.split(" ")[1];
+    console.log(token,'this is token from student middleware check')
 
       if (token === "undefined") {
+
+        console.log('tocken is undefined')
+
       return res.status(401).json({ message: "Authentication failed shijith" });
 
     } else {
+
       console.log('token decode in lese')
+      
       const decodedToken =  jwt.verify(token, process.env.Student_Secret_key );
 
       req.studentId = decodedToken._id;
       next();
     }
   } catch (error) {
+    
+    console.log('inside student middleware inside catch block')
     return res.status(401).json({ message: "Authentication failed" });
   }
 };
