@@ -530,7 +530,7 @@ exports.submitQuestion = async (req, res) => {
         const updatedStudent = await students.findOneAndUpdate(
             {
                 _id: studentId,
-                'assignment.date': { $ne: formattedDate } // Check if the date is not equal
+                'assignment.date': { $ne: formattedDate } 
             },
             {
                 $push: {
@@ -568,13 +568,16 @@ exports.submitQuestion = async (req, res) => {
                 });
             }
             res.json('updated')
+            return;
         } else {
             console.log('Assignment not updated. Either student not found or date already exists.');
             res.json('date is exist')
+            return;
         }
 
     } else {
         res.json('student not found')
+        return;
     }
 
 }
