@@ -1,32 +1,58 @@
 let users = [];
 
+// const addUser = ({ id, user, room }) => {
+
+//     if(user && room){
+//         user = user.trim().toLowerCase();
+//         room = room.trim().toLowerCase();
+//     }
+
+//     if (!user || !room) {
+//         return { error: 'name and room required' }
+//     }
+
+//     if (users.length) {
+//         const data = users.find(e => e.user === user && e.room === room)
+
+//         if (data) {
+//             return { error: 'user already exist' }
+//         }
+//     }
+
+//     const response = { id, user, room }
+
+//     users.push(response)
+
+//     console.log(users)
+
+//     return { response };
+// }
+
 const addUser = ({ id, user, room }) => {
 
-    if(user && room){
+    if (user && room) {
         user = user.trim().toLowerCase();
         room = room.trim().toLowerCase();
     }
 
     if (!user || !room) {
-        return { error: 'name and room required' }
+        return { error: 'name and room required' };
     }
 
-    if (users.length) {
-        const data = users.find(e => e.user === user && e.room === room)
+    const existingUser = users.find(e => e.user === user && e.room === room);
 
-        if (data) {
-            return { error: 'user already exist' }
-        }
+    if (existingUser) {
+        return { error: 'user already exists in the room' };
     }
 
-    const response = { id, user, room }
+    const response = { id, user, room };
 
-    users.push(response)
+    users.push(response);
 
-    console.log(users)
+    console.log(users);
 
     return { response };
-}
+};
 
 const getUser = (id) => {
     return users.find(e => e.id == id);
