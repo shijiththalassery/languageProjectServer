@@ -22,8 +22,8 @@ const studentVerification = async (req, res, next) => {
     } else {
 
       console.log('token decode in lese')
-      
-      const decodedToken =  jwt.verify(token, process.env.Student_Secret_key );
+
+      const decodedToken =  jwt.verify(token, process.env.STUDENT_SECRET_KEY );
 
       req.studentId = decodedToken._id;
       next();
