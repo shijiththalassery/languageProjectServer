@@ -288,8 +288,11 @@ exports.googleAuthCheckStudent = async (req, res) => {
 }
 
 exports.studentLogin = async (req, res) => {
+    console.log('entering studnet detail');
+
     const { email, password } = req.body;
     try {
+        console.log(req.body,'this is the  body of the student')
         const studentData = await students.findOne({ email: email });
         console.log(studentData, 'this is the student dadta')
         if (studentData.is_blocked == true) {
@@ -314,6 +317,7 @@ exports.studentLogin = async (req, res) => {
                 role: 'tutor',
                 studentToken: token
             });
+            console.log('susccessly student is logged in')
             return;
         } else {
             res.json({
@@ -322,6 +326,7 @@ exports.studentLogin = async (req, res) => {
             return;
         }
     } catch (error) {
+        console.log('this is the catch block of the student login')
         console.log(error);
         res.json({
             message: 'server error'
