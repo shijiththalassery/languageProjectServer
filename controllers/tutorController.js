@@ -252,6 +252,7 @@ exports.tutorOtpVerification = async (req, res) => {
                 password: hPassword,
                 language: language,
                 timeSlot: timeSlot,
+                availableTime:timeSlot,
                 price: price,
                 profilePhoto: imageUrl,
             });
@@ -346,34 +347,6 @@ exports.tutorDetail = async (req, res) => {
 
 
 
-exports.tutorPremiumPurchase = async (req, res) => {
-
-    console.log('inside premium purchase')
-    const payment_capture = 1
-    const amount = 990
-    const currency = 'INR'
-
-    const options = {
-        amount: amount * 100,
-        currency,
-        receipt: shortid.generate(),
-        payment_capture
-    }
-
-    try {
-        const response = await razorpay.orders.create(options)
-        console.log(response)
-        res.json({
-            id: response.id,
-            currency: response.currency,
-            amount: response.amount
-        })
-        return;
-    } catch (error) {
-        console.log(error)
-    }
-}
-
 
 exports.tutorProfileEdit = async (req, res) => {
     console.log('tutor edit ')
@@ -432,13 +405,14 @@ exports.tutorProfileEdit = async (req, res) => {
 
 exports.tutorPremuimSetUp = async (req, res) => {
     console.log('entering tutorPremuimSetUp')
-    const { email } = req.body;
-    console.log(email)
+    console.log(req.tutorId,'this is the tutor id')
+    const tutorId = req.tutorId;
+
     try {
-        const data = await tutors.findOne({ email: email });
+        const data = await tutors.findById(tutorId);
         console.log(data.name, data.email, 'these are the data from api')
         const updateUser = await tutors.findOneAndUpdate(
-            { email: email },
+            { _id: tutorId },
             {
                 $set: {
                     is_premium: true,
@@ -448,16 +422,17 @@ exports.tutorPremuimSetUp = async (req, res) => {
         );
         if (updateUser) {
             console.log(updateUser.is_premium, 'this is the updated user')
-            res.json({
-                message: 'ok',
-            })
+            res.json('successfully Purchased');
+            return;
         } else {
-            res.json({
-                message: 'fail'
-            })
+            res.json('purchase failed');
+            return;
+
         }
     } catch (error) {
         console.log(error)
+        res.json('serverError');
+        return;
     }
 
 }

@@ -54,6 +54,9 @@ const studentSchema = new mongoose.Schema({
             purchaseDate: {
                 type: String
             },
+            cancellationDate: {
+                type: String
+            },
             endDate: {
                 type: String
             },

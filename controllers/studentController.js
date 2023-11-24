@@ -87,20 +87,27 @@ exports.tutorList = async (req, res) => {
     }
 
     if (langTypes) {
-        console.log(langTypes,'this is language type')
+        console.log(langTypes, 'this is language type')
         query.language = langTypes;
-        
+
     }
 
     if (sortTypes) {
-        console.log(sortTypes,'this is sort tyep')
+        console.log(sortTypes, 'this is sort tyep')
         let sortDirection = 1; // Default to ascending
 
         if (sortTypes === "Descending") {
-          sortDirection = -1;
+            sortDirection = -1;
         }
-  
-        tutorList = await tutors.find(query).sort({ price: sortDirection })
+
+        tutorList = await tutors.find(query).sort({ is_premium: -1 }).sort({ price: sortDirection })
+        // tutorList = await tutors.find(query).sort({ is_premium: -1, price: sortDirection });
+        // tutorList = await tutors.find(query).sort({ is_premium: -1 }).sort({ price: sortDirection });
+        // const tutorList = await tutors.find(query).sort([
+        //     { is_premium: -1 }, 
+        //     { price: sortDirection } 
+        //   ])
+
         res.json(tutorList)
     } else {
         tutorList = await tutors.find(query)
@@ -184,6 +191,11 @@ exports.buyCourse = async (req, res) => {
     const formattedDate = currentDate.toISOString().slice(0, 10);
     const originalDate = new Date(formattedDate);
     const newDate = new Date(originalDate);
+
+    const threeDaysLater = new Date(currentDate);
+    threeDaysLater.setDate(currentDate.getDate() + 3);
+    const cancellationDate = threeDaysLater.toISOString().slice(0, 10)
+
     newDate.setDate(originalDate.getDate() + 30);
     const formattedNewDate = newDate.toISOString().slice(0, 10);
 
@@ -198,6 +210,7 @@ exports.buyCourse = async (req, res) => {
                         selectedTime: studentSelectedTime,
                         language: language,
                         purchaseDate: formattedDate,
+                        cancellationDate: cancellationDate,
                         endDate: formattedNewDate,
                         origianlTime: stringTime,
                         roomNo: roomNo
@@ -292,7 +305,7 @@ exports.studentLogin = async (req, res) => {
 
     const { email, password } = req.body;
     try {
-        console.log(req.body,'this is the  body of the student')
+        console.log(req.body, 'this is the  body of the student')
         const studentData = await students.findOne({ email: email });
         console.log(studentData, 'this is the student dadta')
         if (studentData.is_blocked == true) {
@@ -525,7 +538,7 @@ exports.myTutorList = async (req, res) => {
         }
     } catch (error) {
         console.log(error);
-        res.json(serverError);
+        res.json("serverError");
         return;
     }
 }
@@ -557,9 +570,9 @@ exports.myAssignment = async (req, res) => {
             );
 
             if (assignments && assignments.length > 0) {
-                console.log(558,assignments)
+                console.log(558, assignments)
                 const assignment = assignments[0].assignment;
-                console.log(560,assignment)
+                console.log(560, assignment)
                 res.json(assignment)
                 return;
 
@@ -583,53 +596,204 @@ exports.myAssignment = async (req, res) => {
 
 }
 
-exports.submitAssignemnt = async( req, res) => {
+exports.submitAssignemnt = async (req, res) => {
 
     console.log('inside submit')
     console.log(req.body)
 
-  const {data, room,  assignmentId} = req.body;
-  try {
-    const student = await students.findOne(
-        {
-            _id: req.studentId,
-            'course.roomNo': room,
-        },
-        {
-            'course.$': 1,
-        }
-    );
-    if (student) {
-        const tutorId = student.course[0].tutorId;
-        const updatedStudent = await students.findOneAndUpdate(
+    const { data, room, assignmentId } = req.body;
+    try {
+        const student = await students.findOne(
             {
-              _id: req.studentId,
-              'assignment._id': assignmentId,
+                _id: req.studentId,
+                'course.roomNo': room,
             },
             {
-              $set: {
-                'assignment.$.answer': data,
-                'assignment.$.submit': true, 
-              },
-            },
-            { new: true }
-          );
-          if (!updatedStudent) {
-            console.log("Student or assignment not found");
-            res.json('Student or assignment not found')
-            return
-          }else{
-            res.json('assignment successfully updated')
-          }
+                'course.$': 1,
+            }
+        );
+        if (student) {
+            const tutorId = student.course[0].tutorId;
+            const updatedStudent = await students.findOneAndUpdate(
+                {
+                    _id: req.studentId,
+                    'assignment._id': assignmentId,
+                },
+                {
+                    $set: {
+                        'assignment.$.answer': data,
+                        'assignment.$.submit': true,
+                    },
+                },
+                { new: true }
+            );
+            if (!updatedStudent) {
+                console.log("Student or assignment not found");
+                res.json('Student or assignment not found')
+                return
+            } else {
+                res.json('assignment successfully updated')
+            }
 
-    }else{
-        res.json('there is no tutor for you')
+        } else {
+            res.json('there is no tutor for you')
+            return;
+        }
+
+    } catch (error) {
+        console.log(error);
+        res.json('serverError')
+    }
+    // res.json('okey shijit')
+}
+
+exports.myCourseDetail = async (req, res) => {
+
+    const roomNo = req.params.id;
+    const studentId = req.studentId
+    console.log(studentId, 'this is id of te student', typeof (studentId))
+    const objectIdInstance = mongoose.Types.ObjectId.createFromHexString(studentId);
+    try {
+
+
+        const result = await students.aggregate([
+            {
+                $match: {
+                    _id: objectIdInstance // Use ObjectId constructor correctly
+                }
+            },
+            {
+                $unwind: "$course"
+            },
+            {
+                $match: {
+                    "course.roomNo": roomNo
+                }
+            },
+            {
+                $lookup: {
+                    from: "tutors",
+                    localField: "course.tutorId",
+                    foreignField: "_id",
+                    as: "tutorData"
+                }
+            },
+            {
+                $addFields: {
+                    "course.tutorData": {
+                        $arrayElemAt: ["$tutorData", 0]
+                    }
+                }
+            },
+            {
+                $project: {
+                    _id: 0, // Exclude _id from the output
+                    course: 1 // Include only the course field in the output
+                }
+            }
+        ]).exec();
+
+        console.log(result[0].course, 'this is the aggregate data');
+        const courseDetail = result[0].course;
+        if(courseDetail){
+            res.json(courseDetail);
+            return;
+        }else{
+            res.json('nocourse');
+            return;
+        }
+
+    } catch (error) {
+        console.log(error);
+        res.json('serverError');
+    }
+    res.json('okey')
+}
+
+exports.cancelPurchase = async( req, res) => {
+    const courseId = req.params.id;
+    const studentId = req.studentId;
+    console.log(courseId,'this is the id of the course');
+    console.log(studentId,' this is the stduent id');
+    const objectIdInstance = mongoose.Types.ObjectId.createFromHexString(studentId);
+    
+    try{
+        const student = await students.findById(studentId);
+
+        if (!student) {
+          res.json('Student not found')
+          return;
+        }
+    
+        const courseIndex = student.course.findIndex(course => course._id.toString() === courseId);
+    
+        if (courseIndex === -1) {
+          res.json('Course not found for the given student')
+          return;
+        }
+    
+        // Step 3: Save the details of the deleted course
+        const deletedCourseDetails = student.course[courseIndex];
+    
+        // Step 4: Remove the course from the array
+        student.course.splice(courseIndex, 1);
+    
+        // Step 5: Save the updated student document
+        await student.save();
+
+        const tutorId = deletedCourseDetails.tutorId;
+        const selectedTime = deletedCourseDetails.selectedTime;
+
+
+        const tutor = await tutors.findById(tutorId);
+
+        if (!tutor) {
+          res.json('Tutor not found')
+          return;
+        }
+    
+        // Step 2: Find the index of selectedTime in bookedTime
+        const bookedTimeIndex = tutor.bookedTime.indexOf(selectedTime);
+    
+        if (bookedTimeIndex === -1) {
+            res.json("Selected time not found in bookedTime")
+          return;
+        }
+    
+        // Step 3: Pop the selected time from bookedTime
+        const poppedTime = tutor.bookedTime.splice(bookedTimeIndex, 1)[0];
+    
+        // Step 4: Push the popped time into availableTime
+        tutor.availableTime.push(poppedTime);
+    
+        // Step 5: Save the updated tutor document
+        await tutor.save();
+    
+        res.json('purchase cancelled successfully');
+    }catch(error){
+        console.log(error);
+        res.json('serverError');
         return;
     }
-    
-  } catch (error) {
-    console.log(error);
-    res.json('serverError')
-  }
-    // res.json('okey shijit')
+}
+
+exports.myDetail = async(req, res) =>{
+    console.log(req.studentId,'thsi is the id of the certifivate ')
+    const studentId = req.studentId;
+
+    try{
+        const studentData = await students.findById(studentId) 
+        const course = studentData.course[0];
+        if(studentData){
+            res.json({studentData, course});
+            return;
+        }else{
+            res.json('noSuchStudent');
+            return;
+        }
+    }catch(error){
+        console.log(error);
+        res.json('serverError');
+        return;
+    }
 }

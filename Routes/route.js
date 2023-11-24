@@ -27,7 +27,11 @@ router.post('/studentProfileEdit',studentAuth.studentVerification , studentContr
 router.post('/reviewPost',studentAuth.studentVerification , studentController.reviewPost); 
 router.get('/myTutorList/:email',studentAuth.studentVerification , studentController.myTutorList) 
 router.post('/myAssignment',studentAuth.studentVerification , studentController.myAssignment)
-router.post('/submitAssignemnt',studentAuth.studentVerification , studentController.submitAssignemnt)
+router.post('/submitAssignemnt',studentAuth.studentVerification , studentController.submitAssignemnt);
+router.get('/myCourseDetail/:id',studentAuth.studentVerification , studentController.myCourseDetail)
+router.get('/cancelPurchase/:id',studentAuth.studentVerification , studentController.cancelPurchase);
+router.get('/myDetail',studentAuth.studentVerification , studentController.myDetail);
+
 
 
 
@@ -38,9 +42,8 @@ router.post('/tutorOtpVerification', tutorController.tutorOtpVerification);
 router.post('/tutorVerification',auth.tutorVerification, tutorController.tutorVerification); 
 router.get('/languageList', tutorController.languageList);
 router.get('/tutorDetail/:email', auth.tutorVerification, tutorController.tutorDetail);
-router.post('/tutorPremiumPurchase', tutorController.tutorPremiumPurchase); // PROTECTION NEEDED need to be change
-router.post('/tutorProfileEdit',auth.tutorVerification, tutorController.tutorProfileEdit); // PROTECTION NEEDED failed updating
-router.post('/tutorPremuimSetUp', tutorController.tutorPremuimSetUp); // PROTECTION NEEDED need to be change
+router.post('/tutorPremiumPurchase',auth.tutorVerification, tutorController.tutorPremuimSetUp); // PROTECTION NEEDED need to be change
+router.post('/tutorProfileEdit',auth.tutorVerification, tutorController.tutorProfileEdit); 
 router.post('/googleAuthCheckTutuor', tutorController.googleAuthCheckTutuor);
 router.get('/studentList/:email',auth.tutorVerification, tutorController.studentList) 
 router.post('/submitQuestion',auth.tutorVerification, tutorController.submitQuestion)
