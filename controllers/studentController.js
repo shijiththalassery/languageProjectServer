@@ -418,21 +418,15 @@ exports.studentProfileEdit = async (req, res) => {
             { new: true } // To return the updated document (optional)
         );
         if (updateUser) {
-            res.json({
-                message: 'ok'
-            })
+            res.json('profile updated successfully')
             return;
         } else {
-            res.json({
-                message: 'failed'
-            })
+            res.json('profile updated failed')
             return;
         }
     } catch (error) {
         console.log(error);
-        res.json({
-            message: 'server error'
-        })
+        res.json('server error')
         return;
     }
 }
