@@ -354,13 +354,8 @@ exports.tutorProfileEdit = async (req, res) => {
         name,
         email,
         phone,
-        password,
-        confPassword,
         profilePhoto,
         backgroundPhoto } = req.body;
-    console.log(req.body, 'this is the body of the ')
-    console.log(profilePhoto, backgroundPhoto, 'these are the user edit data from edit profile')
-    const hPassword = await securedPassword(password);
     try {
         const profile = await cloudinary.uploader.upload(profilePhoto, {
             folder: 'tutorProfilePhoto',
@@ -379,7 +374,6 @@ exports.tutorProfileEdit = async (req, res) => {
                     name: name, // Replace newName with the new name value
                     email: email, // Replace newEmail with the new email value
                     phone: phone,
-                    password: hPassword,
                     profilePhoto: profileUrl,// Replace newPhone with the new phone value
                     backgroundPhoto: backgroundUrl
                 },
@@ -387,19 +381,17 @@ exports.tutorProfileEdit = async (req, res) => {
             { new: true } // To return the updated document (optional)
         );
         if (updateUser) {
-            res.json({
-                message: 'ok'
-            })
+            console.log('success')
+            res.json('successfully updated')
+            return;
         } else {
-            res.json({
-                message: 'failed'
-            })
+            res.json('failed');
+            return;
         }
     } catch (error) {
         console.log(error);
-        res.json({
-            message: 'server error'
-        })
+        res.json('server error');
+        return;
     }
 }
 
