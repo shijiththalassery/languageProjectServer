@@ -67,6 +67,36 @@ router.get('/getChartData',adminAuth.adminVerfication, adminController.chartData
 
 
 
+router.post('/whatsApp',async(req, res)=>{
+
+    const { name, place, email, phone, district, event } = req.body;
+
+    // Set up your Twilio credentials and WhatsApp-enabled Twilio number
+    const accountSid = process.env.VITE_API_ACCOUNT_SID;
+    const authToken = process.env.VITE_API_AUTH_TOKEN;
+    const fromNumber = phone; 
+  
+    const client = new twilio.Twilio(accountSid, authToken);
+  
+    try {
+
+      const message = await client.messages.create({
+        body: `Name: ${name}\nPlace: ${place}\nEmail: ${email}\nPhone: ${phone}\nDistrict: ${district}\nEvent: ${event}`,
+        from: fromNumber,
+        to: 'whatsapp:+919567260882', 
+      });
+  
+      console.log('WhatsApp message sent SID:', message.sid);
+      res.status(200).json({ success: true });
+    } catch (error) {
+      console.error('Error sending WhatsApp message:', error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  
+})
+
+
+
 
 
 
