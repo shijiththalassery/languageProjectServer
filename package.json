@@ -27,6 +27,6 @@
     "nodemon": "^3.0.1"
   },
   "scripts": {
-    "shijith": "nodemon app.js"
+    "start": "nodemon app.js"
   }
 }
