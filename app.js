@@ -11,7 +11,12 @@ const { v4: uuidv4 } = require('uuid');
 const bodyParser = require('body-parser');
 const { Server } = require('socket.io'); // Import Server from socket.io
 const handlebars = require('handlebars')
-const cookieParser = require('cookie-parser');  
+const cookieParser = require('cookie-parser');
+
+
+const path = require('path'); // Import the path module
+
+
 const { 
   addUser, 
   removeUser, 
@@ -21,6 +26,8 @@ const {
 
 app.use(bodyParser.json({ limit: '200mb' }));
 app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
+
+
 
 app.use(cookieParser())
 
@@ -39,6 +46,12 @@ require("./db/connection")
 app.use(express.json());
 app.use(cors());
 app.use(router);
+
+
+// app.get('*', (req, res) => {
+//   res.sendFile(path.join(__dirname, "dist", "index.html"));
+// });
+app.use(express.static(path.join(__dirname, 'build')));
 
 const server = http.createServer(app);
 
